@@ -6,6 +6,7 @@
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
 #' @importFrom RSQLite dbConnect SQLite dbReadTable dbDisconnect
+#' @export
 #'
 loadDifar <- function(db.fname) {
   con <- dbConnect(SQLite(), db.fname)

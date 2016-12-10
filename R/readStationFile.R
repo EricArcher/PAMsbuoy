@@ -5,6 +5,8 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
+#' @export
+#'
 readStationFile <- function(f) {
   df <- read.csv(f, na.strings = c("", " ", "NA"), stringsAsFactors = FALSE)
   if(nrow(df) == 0) return(NULL)

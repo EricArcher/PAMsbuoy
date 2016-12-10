@@ -1,6 +1,8 @@
 Package: PAMsbuoy
-Title: Manipulation and filtering for PAM (Passive Acoustic Monitoring) data collected from sonobuoys
-Description: Manipulation and filtering for PAM (Passive Acoustic Monitoring) data collected from sonobuoys
+Title: Manipulation and filtering for PAM (Passive Acoustic Monitoring) data
+    collected from sonobuoys
+Description: Manipulation and filtering for PAM (Passive Acoustic Monitoring)
+    data collected from sonobuoys
 Version: 1.0
 License: GNU General Public License
 Authors@R: c(
@@ -9,4 +11,6 @@ URL: https://github.com/EricArcher/PAMSbuoy
 Depends:
     R (>= 3.2.0)
 Imports:
-  RSQLite
+    RSQLite,
+    swfscMisc
+RoxygenNote: 5.0.1.9000

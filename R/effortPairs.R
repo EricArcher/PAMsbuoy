@@ -5,6 +5,8 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
+#' @export
+#'
 effortDuration <- function(df) {
   eff.df <- do.call(rbind, lapply(seq(1, nrow(df), by = 2), function(i) {
     start <- df$datetime[i]

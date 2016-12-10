@@ -5,6 +5,8 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
+#' @export
+#'
 loadNoise <- function(folder) {
   fnames <- dir(folder, full.names = TRUE)
   df <- do.call(rbind, lapply(fnames, readStationFile))

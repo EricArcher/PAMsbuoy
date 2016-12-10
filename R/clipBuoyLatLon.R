@@ -7,6 +7,9 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
+#' @importFrom swfscMisc isBetween
+#' @export
+#'
 clipBuoyLatLon <- function(df, lat.range = NULL, lon.range = NULL) {
   if(is.null(lat.range)) lat.range <- range(df$BuoyLatitude)
   if(is.null(lon.range)) lon.range <- range(df$BuoyLongitude)

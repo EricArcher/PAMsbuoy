@@ -5,6 +5,8 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
+#' @export
+#'
 buoyLoc <- function(df) {
   result <- do.call(rbind, by(df, list(buoy = df$Channel), function(x) {
     c(
