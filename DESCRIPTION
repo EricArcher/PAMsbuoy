@@ -2,7 +2,7 @@ Package: PAMsbuoy
 Title: Manipulation and filtering for PAM (Passive Acoustic Monitoring) data
     collected from sonobuoys
 Description: Manipulation and filtering for PAM (Passive Acoustic Monitoring)
-    data collected from sonobuoys
+    data collected from sonobuoys.
 Version: 1.0
 License: GNU General Public License
 Authors@R: c(
