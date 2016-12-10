@@ -5,6 +5,7 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
+#' @importFrom utils read.csv
 #' @export
 #'
 readStationFile <- function(f) {

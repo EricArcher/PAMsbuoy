@@ -5,6 +5,7 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
+#' @importFrom stats median
 #' @export
 #'
 buoyLoc <- function(df) {
