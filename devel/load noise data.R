@@ -1,5 +1,5 @@
 rm(list = ls())
-source("sb funcs.R")
+library(PAMsbuoy)
 
 folder <- "calcurceas/noise"
 
