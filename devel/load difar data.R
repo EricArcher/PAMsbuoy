@@ -1,6 +1,8 @@
 rm(list = ls())
 library(PAMsbuoy)
 
+# Q: should file.choose be used to select sqlite file?
+
 fname <- "playback sea trial/PAST_20160607_POST_PB_Edited.sqlite3"
 
 difar <- loadDifar(fname)
@@ -10,6 +12,7 @@ buoy.location <- buoyLoc(difar)
 save(difar, buoy.location, file = "difar.rdata")
 
 
+# Q: what is structure of data with TrueBearing angles?
 
 #Check that all TrueBearing angles are <360 deg
 for (i in 1:nrow(difar)){
@@ -17,6 +20,9 @@ for (i in 1:nrow(difar)){
   ifelse (b>=360, difar$TrueBearing[i]<- b-360, difar$TrueBearing[i]<-difar$TrueBearing[i])
   ifelse (b<0, difar$TrueBearing[i] <- b + 360, difar$TrueBearing[i] <- difar$TrueBearing[i])
 }
+
+
+# Q: "badAngle" assumes geometry of 2 buoys per detection - do we want to make this more generic?
 
 #Find angle difference between TrueBearing and Bad Angle
 difar <- subset(difar, difar$station %in% stations$station)

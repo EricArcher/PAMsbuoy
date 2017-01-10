@@ -10,7 +10,9 @@
 loadNoise <- function(folder) {
   fnames <- dir(folder, full.names = TRUE)
   df <- do.call(rbind, lapply(fnames, readStationFile))
+  # remove trailing spaces from notes
   df$notes <- sub("[[:space:]]+$", "\\1", df$notes)
+  # find rows that represent noise
   has.noise <- grep("noise", df$notes, ignore.case = TRUE)
   if(length(has.noise) == 0) return(NULL)
   df[has.noise, ]
