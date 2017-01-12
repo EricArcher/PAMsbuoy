@@ -19,6 +19,8 @@ loadDifar <- function(db.fname) {
   difar$MatchedAngles <- gsub(" ", "", difar$MatchedAngles)
   difar$TrackedGroup <- gsub(" ", "", difar$TrackedGroup)
 
+# Q: Is calibration data available to be included here?
+
   difar$detection <- labelDetection(difar)
   difar
 }

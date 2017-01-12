@@ -6,10 +6,16 @@ library(PAMsbuoy)
 fname <- "playback sea trial/PAST_20160607_POST_PB_Edited.sqlite3"
 
 difar <- loadDifar(fname)
+# Q: What is difference between BuoyLatitude and Latitude?
+
 difar <- clipBuoyLatLon(difar, lat.range = c(30, max(difar$BuoyLatitude)))
+
+# Q: Add more buoy summary info?
 buoy.location <- buoyLoc(difar)
 
 save(difar, buoy.location, file = "difar.rdata")
+
+
 
 
 # Q: what is structure of data with TrueBearing angles?
