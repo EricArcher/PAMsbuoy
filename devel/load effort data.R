@@ -1,8 +1,6 @@
 rm(list = ls())
 library(PAMsbuoy)
 
-# Q: will effort be SQLite?
-
 folder <- "calcurceas/effort"
 
 effortAll <- loadEffort(folder)
