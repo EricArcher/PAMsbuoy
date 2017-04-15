@@ -8,6 +8,9 @@ fname <- "playback sea trial/PAST_20160607_POST_PB_Edited.sqlite3"
 difar <- loadDifar(fname)
 # Q: What is difference between BuoyLatitude and Latitude?
 
+# A: Latitude is for any triangulations Pamguard tries to make. Will only be present
+# if MatchedAngles is not NA. Not sure how it decides what to use if multiple matches.
+
 difar <- clipBuoyLatLon(difar, lat.range = c(30, max(difar$BuoyLatitude)))
 
 # Q: Add more buoy summary info?
@@ -20,6 +23,14 @@ save(difar, buoy.location, file = "difar.rdata")
 
 # Q: what is structure of data with TrueBearing angles?
 
+# A: TrueBearing is just DIFARBearing + Calibration value. Calibration value is stored in
+# BuoyHeading if it is present. BuoyHeading should be NA for all 'Vessel' species (while it is
+# calibrating). After that it should fill in with Pamguard's calibration value.
+
+# ISSUE: Looking through CalCurCEAS data, there are some instances where BuoyHeading is NA
+# for non-vessel species even when a calibration value should be known/present. Don't know why.
+# Possible that this doesn't matter if we are going to do our own calibration anyway.
+
 #Check that all TrueBearing angles are <360 deg
 for (i in 1:nrow(difar)){
   b <- as.numeric(difar$TrueBearing[i])
@@ -29,6 +40,11 @@ for (i in 1:nrow(difar)){
 
 
 # Q: "badAngle" assumes geometry of 2 buoys per detection - do we want to make this more generic?
+
+# A: I *think* this part was used for excluding angles within 20 deg of buoy pair axis,
+# which we don't plan on doing with our model. This was part of Shannon/Jay's original
+# plan since distance error is large in these areas, but it should be fine in our model.
+# Might be wrong, but I think we can ignore this chunk.
 
 #Find angle difference between TrueBearing and Bad Angle
 difar <- subset(difar, difar$station %in% stations$station)
