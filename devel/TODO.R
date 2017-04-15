@@ -5,3 +5,5 @@
 # TODO: Buoy Summary
 
 # TODO: Detection Summary
+
+# TODO: Function to return total effort - noise in window for a station (set of buoys)

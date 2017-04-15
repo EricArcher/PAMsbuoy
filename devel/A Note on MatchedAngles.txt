@@ -1,0 +1,11 @@
+Matched Angles doesn't decide if all matched angles meet at the same spot,
+only if each one intersects (roughly). Proof is in IDs 96-103 in this DB.
+96-99 and 100-103 are 1 call each from the buoys. The first set are all taken
+from actual calls, so they should all point to the same place. The second set
+has Buoy 2 pointing at white noise - DIFARBearing is 139 vs 321 in the first set.
+There is no way these all point to the same spot with a 180' difference between these 
+two readings, but the MatchedAngles column is the same for the two sets. The difference is 
+in the Latitude/Longitude columns. This is Pamguard's guess at where the point is. After
+the call pointing at noise (bearing 139) this guess is very different from previous guesses.
+This is where Pamguard is trying to use all MatchedAngles calls to get one intersection point
+using some kind of algorithm (don't know what).
