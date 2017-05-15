@@ -15,4 +15,3 @@ Get the median location of each buoy.
 \author{
 Eric Archer \email{eric.archer@noaa.gov}
 }
-

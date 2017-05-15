@@ -15,4 +15,3 @@ Read a file with station data into data.frame.
 \author{
 Eric Archer \email{eric.archer@noaa.gov}
 }
-

@@ -19,4 +19,3 @@ Remove buoys outside of requested range.
 \author{
 Eric Archer \email{eric.archer@noaa.gov}
 }
-

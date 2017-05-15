@@ -15,4 +15,3 @@ Load noise data from folder.
 \author{
 Eric Archer \email{eric.archer@noaa.gov}
 }
-

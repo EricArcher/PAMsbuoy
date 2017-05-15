@@ -15,4 +15,3 @@ Calculate duration of effort segments.
 \author{
 Eric Archer \email{eric.archer@noaa.gov}
 }
-

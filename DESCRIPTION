@@ -13,4 +13,4 @@ Depends:
 Imports:
     RSQLite,
     swfscMisc
-RoxygenNote: 5.0.1.9000
+RoxygenNote: 6.0.1

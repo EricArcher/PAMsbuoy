@@ -1,24 +1,19 @@
-#' @title Load DIFAR data
-#' @description Load DIFAR data from SQLite database.
+#' @title Format DIFAR data
+#' @description Format DIFAR data from SQLite database.
 #'
-#' @param db.fname filename of SQLite database with DIFAR data
+#' @param df data.frame of DIFAR data from database
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
-#' @importFrom RSQLite dbConnect SQLite dbReadTable dbDisconnect
 #' @export
 #'
-loadDifar <- function(db.fname) {
-  con <- dbConnect(SQLite(), db.fname)
-  difar <- dbReadTable(con, "DIFAR_Localisation")
-  dbDisconnect(con)
-
+formatDifar <- function(df) {
   # remove extraneous spaces in data
-  difar$TriggerName <- gsub(" ", "", difar$TriggerName)
-  difar$Species <- gsub(" ", "", difar$Species)
-  difar$MatchedAngles <- gsub(" ", "", difar$MatchedAngles)
-  difar$TrackedGroup <- gsub(" ", "", difar$TrackedGroup)
+  df$TriggerName <- gsub(" ", "", df$TriggerName)
+  df$Species <- gsub(" ", "", df$Species)
+  df$MatchedAngles <- gsub(" ", "", df$MatchedAngles)
+  df$TrackedGroup <- gsub(" ", "", df$TrackedGroup)
 
-  difar$detection <- labelDetection(difar)
-  difar
+  df$detection <- labelDetection(df)
+  df
 }

@@ -1,11 +1,11 @@
 rm(list = ls())
 library(PAMsbuoy)
 
-# Q: should file.choose be used to select sqlite file?
-
 fname <- "playback sea trial/PAST_20160607_POST_PB_Edited.sqlite3"
 
-difar <- loadDifar(fname)
+db <- loadDB(fname)
+difar <- formatDifar(db$DIFAR_Localisation)
+
 # Q: What is difference between BuoyLatitude and Latitude?
 
 # A: Latitude is for any triangulations Pamguard tries to make. Will only be present
@@ -13,7 +13,6 @@ difar <- loadDifar(fname)
 
 difar <- clipBuoyLatLon(difar, lat.range = c(30, max(difar$BuoyLatitude)))
 
-# Q: Add more buoy summary info?
 buoy.location <- buoyLoc(difar)
 
 save(difar, buoy.location, file = "difar.rdata")
