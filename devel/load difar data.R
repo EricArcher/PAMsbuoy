@@ -6,11 +6,6 @@ fname <- "playback sea trial/PAST_20160607_POST_PB_Edited.sqlite3"
 db <- loadDB(fname)
 difar <- formatDifar(db$DIFAR_Localisation)
 
-# Q: What is difference between BuoyLatitude and Latitude?
-
-# A: Latitude is for any triangulations Pamguard tries to make. Will only be present
-# if MatchedAngles is not NA. Not sure how it decides what to use if multiple matches.
-
 difar <- clipBuoyLatLon(difar, lat.range = c(30, max(difar$BuoyLatitude)))
 
 buoy.location <- buoyLoc(difar)
