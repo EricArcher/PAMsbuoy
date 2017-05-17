@@ -19,15 +19,34 @@ formatStation <- function(db) {
     split(., .$Buoy)
 
   calibration <- db$DIFAR_Localisation %>%
-    mutate(
-      Species = tolower(str_trim(Species)),
-      Buoy = as.character(Channel)
-    ) %>%
     filter(Species == "vessel") %>%
+    mutate(Buoy = as.character(Channel)) %>%
     select(Buoy, UTC, DIFARBearing) %>%
     arrange(Buoy, UTC) %>%
     split(., .$Buoy) %>%
     calculateOffset(position, db)
 
-  transpose(list(position = position, calibration = calibration))
+  detections <- db$DIFAR_Localisation %>%
+    filter(Species != "vessel") %>%
+    mutate(
+      Buoy = as.character(Channel),
+      MatchedAngles = gsub(" ", "", MatchedAngles)
+    ) %>%
+    mutate(detection = labelDetection(.)) %>%
+    select(
+      detection, Buoy, UTC, DIFARBearing, ClipLength, DifarFrequency,
+      SignalAmplitude, DifarGain
+    ) %>%
+    split(., .$detection)
+
+  effort <- NULL
+
+  noise <- NULL
+
+  list(
+    buoys = transpose(list(position = position, calibration = calibration)),
+    detections = detections,
+    effort = effort,
+    noise = noise
+  )
 }

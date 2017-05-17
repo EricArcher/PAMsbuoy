@@ -9,14 +9,16 @@
 #'
 labelDetection <- function(df) {
   grp <- df$MatchedAngles
+  id <- as.character(df$Id)
   i <- which(is.na(grp))
   # Include IDs into set of matched ids
-  grp[-i] <- paste(df$Id[-i], grp[-i], sep = ";")
-  grp[i] <- df$Id[i]
+  grp[-i] <- paste(id[-i], grp[-i], sep = ";")
+  grp[i] <- id[i]
   # Extract ID numbers
-  grp <- lapply(strsplit(grp, ";"), as.numeric)
+  grp <- strsplit(grp, ";")
+  names(grp) <- id
   # replaced matched ids with intersections of IDs
-  for(i in 1:nrow(df)) {
+  for(i in id) {
     matched.i <- grp[[i]]
     grp.i <- sort(unique(unlist(grp[matched.i])))
     matched.i <- sort(unique(c(matched.i, grp.i)))

@@ -9,6 +9,7 @@
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
 #' @importFrom stats approx
+#' @importFrom swfscMisc bearing
 #' @export
 #'
 calculateOffset <- function(calibration, position, db) {
