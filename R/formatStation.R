@@ -12,12 +12,14 @@
 #' @export
 #'
 formatStation <- function(db) {
+  # a list of position data for each buoy
   position <- db$HydrophoneStreamers %>%
     mutate(Buoy = as.character(StreamerIndex)) %>%
     select(Buoy, UTC, Latitude, Longitude) %>%
     arrange(Buoy, UTC) %>%
     split(., .$Buoy)
 
+  # a list of calibration data for each buoy
   calibration <- db$DIFAR_Localisation %>%
     filter(Species == "vessel") %>%
     mutate(Buoy = as.character(Channel)) %>%
@@ -26,6 +28,7 @@ formatStation <- function(db) {
     split(., .$Buoy) %>%
     calculateOffset(position, db)
 
+  # a list of each detection
   detections <- db$DIFAR_Localisation %>%
     filter(Species != "vessel") %>%
     mutate(

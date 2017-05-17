@@ -7,7 +7,8 @@
 #'   \code{UTC} and position in columns named \code{Latitude} and \code{Longitude}
 #'
 #' @return a data frame of estimated latitude and longitude for each element in
-#'   \code{time}
+#'   \code{time} and magnetic variation if a column called \code{MagneticVariation}
+#'   exists in \code{pos}
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'

@@ -13,20 +13,26 @@
 #' @export
 #'
 calculateOffset <- function(calibration, position, db) {
+  # loop through buoys in calibration list
   for(b in names(calibration)) {
     b.cal <- calibration[[b]]
+    # get buoy position
     buoy.pos <- buoyPosition(b.cal, position)
+    # get ship position at calibration point times
     ship.pos <- estimatePosition(b.cal$UTC, db$gpsData)
+    # calculate true bearing from buoy to ship for each set of positions
     true.bearing <- mapply(
       bearing,
       buoy.pos$Latitude, buoy.pos$Longitude,
       ship.pos$Latitude, ship.pos$Longitude
     )
+    # add magnetic variation and true bearing to calibration data frame
     b.cal <- cbind(
       b.cal,
       magnetic.variation = ship.pos$MagneticVariation,
       true.bearing = apply(true.bearing, 2, mean)
     )
+    # calculate offset = true - difar bearing
     b.cal$offset <- b.cal$true.bearing - b.cal$DIFARBearing
     calibration[[b]] <- b.cal
   }

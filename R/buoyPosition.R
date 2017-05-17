@@ -12,9 +12,7 @@
 #'
 #' @export
 #'
-buoyPosition <- function(
-  x, buoy.data, method = c("initial", "interpolate", "drift"), ...
-) {
+buoyPosition <- function(x, buoy.data, method = c("initial", "interpolate", "drift"), ...) {
   switch(
     match.arg(method),
     initial = buoyPositionInitial(x, buoy.data)
