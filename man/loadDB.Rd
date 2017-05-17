@@ -8,6 +8,8 @@ loadDB(db.fname = NULL, db.str = FALSE)
 }
 \arguments{
 \item{db.fname}{filename of SQLite database with DIFAR data}
+
+\item{db.str}{show database structure?}
 }
 \description{
 Load list of data frames in DIFAR database

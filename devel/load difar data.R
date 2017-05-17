@@ -1,9 +1,11 @@
 rm(list = ls())
 library(PAMsbuoy)
 
-fname <- "playback sea trial/PAST_20160607_POST_PB_Edited.sqlite3"
+# fname <- "playback sea trial/PAST_20160607_POST_PB_Edited.sqlite3"
+fname <- "PAST_20160607_POST_VesselTime_Test_5-10.sqlite3"
 
 db <- loadDB(fname)
+
 difar <- formatDifar(db$DIFAR_Localisation)
 
 difar <- clipBuoyLatLon(difar, lat.range = c(30, max(difar$BuoyLatitude)))

@@ -2,6 +2,7 @@
 #' @description Load list of data frames in DIFAR database
 #'
 #' @param db.fname filename of SQLite database with DIFAR data
+#' @param db.str show database structure?
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
@@ -18,6 +19,11 @@ loadDB <- function(db.fname = NULL, db.str = FALSE) {
     simplify = FALSE
   )
   dbDisconnect(con)
+
+  db$HydrophoneStreamers$UTC <- as.POSIXct(db$HydrophoneStreamers$UTC, tz = "GMT")
+  db$DIFAR_Localisation$UTC <- as.POSIXct(db$DIFAR_Localisation$UTC, tz = "GMT")
+  db$gpsData$UTC <- as.POSIXct(db$gpsData$UTC, tz = "GMT")
+
   if(db.str) print(str(db))
   invisible(db)
 }

@@ -12,5 +12,8 @@ Depends:
     R (>= 3.2.0)
 Imports:
     RSQLite,
-    swfscMisc
+    swfscMisc,
+    dplyr,
+    purrr,
+    stringr
 RoxygenNote: 6.0.1
