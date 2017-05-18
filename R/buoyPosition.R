@@ -6,7 +6,10 @@
 #'   time (\code{UTC})
 #' @param buoy.data data.frame of buoy positions. Format depends on choice of
 #'   \code{method}
-#' @param method method of position estimation to use
+#' @param method method of position estimation to use. \code{initial} chooses the
+#'   earliest position, \code{interpolate} will interpolate within multiple
+#'   positions (e.g., from GPS), and \code{drift} uses a drift model
+#' @param \dots arguments passed on to other functions
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
