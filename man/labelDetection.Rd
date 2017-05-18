@@ -15,4 +15,3 @@ Label common DIFAR detections.
 \author{
 Eric Archer \email{eric.archer@noaa.gov}
 }
-
