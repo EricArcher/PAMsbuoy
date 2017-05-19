@@ -1,3 +1,4 @@
+rm(list = ls())
 library(PAMsbuoy)
 
 fname <- "RTsonobuoy_1_15_09.sqlite3"

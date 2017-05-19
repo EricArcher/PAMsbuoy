@@ -2,9 +2,21 @@
 % Please edit documentation in R/formatStation.R
 \name{formatStation}
 \alias{formatStation}
+\alias{formatBuoyPosition}
+\alias{formatBuoyCalibration}
+\alias{formatBuoyEffort}
+\alias{formatDetections}
 \title{Format Station Data}
 \usage{
 formatStation(db)
+
+formatBuoyPosition(db)
+
+formatBuoyCalibration(db, position)
+
+formatBuoyEffort(db)
+
+formatDetections(db, buoys)
 }
 \arguments{
 \item{db}{list of data frames from PAMGuard SQLlite database}
