@@ -42,7 +42,8 @@ formatStation <- function(db) {
     ) %>%
     split(., .$detection)
 
-  effort <- NULL
+  effort <- db$Listening_Effort %>%
+    select(UTC, Status)
 
   noise <- NULL
 

@@ -4,12 +4,12 @@
 \alias{loadDB}
 \title{Load DIFAR database}
 \usage{
-loadDB(fname = NULL, show.str = FALSE)
+loadDB(fname = NULL, verbose = FALSE)
 }
 \arguments{
 \item{fname}{filename of SQLite database with DIFAR data}
 
-\item{show.str}{show database structure?}
+\item{verbose}{show database structure?}
 }
 \description{
 Load list of data frames in DIFAR database

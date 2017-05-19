@@ -14,7 +14,8 @@ estimatePosition(x, pos)
 }
 \value{
 a data frame of estimated latitude and longitude for each element in
-  \code{time}
+  \code{time} and magnetic variation if a column called \code{MagneticVariation}
+  exists in \code{pos}
 }
 \description{
 Estimate positions for a set of times using a data frame of

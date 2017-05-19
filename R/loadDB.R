@@ -2,29 +2,34 @@
 #' @description Load list of data frames in DIFAR database
 #'
 #' @param fname filename of SQLite database with DIFAR data
-#' @param show.str show database structure?
+#' @param verbose show database structure?
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
 #' @importFrom RSQLite dbConnect SQLite dbReadTable dbListTables dbDisconnect
 #' @export
 #'
-loadDB <- function(fname = NULL, show.str = FALSE) {
+loadDB <- function(fname = NULL, verbose = FALSE) {
   if(is.null(fname)) fname <- file.choose()
   con <- dbConnect(SQLite(), fname)
   db <- sapply(
     dbListTables(con),
-    function(tbl) dbReadTable(con, tbl),
+    function(tbl) {
+      df <- dbReadTable(con, tbl)
+      if("UTC" %in% colnames(df) & is.character(df$UTC)) {
+        df$UTC <- as.POSIXct(df$UTC, tz = "GMT")
+      }
+      df
+    },
     USE.NAMES = TRUE,
     simplify = FALSE
   )
   dbDisconnect(con)
+  attr(db, "station") <- basename(fname)
 
-  db$DIFAR_Localisation$Species = tolower(str_trim(db$DIFAR_Localisation$Species))
-  db$DIFAR_Localisation$UTC <- as.POSIXct(db$DIFAR_Localisation$UTC, tz = "GMT")
-  db$HydrophoneStreamers$UTC <- as.POSIXct(db$HydrophoneStreamers$UTC, tz = "GMT")
-  db$gpsData$UTC <- as.POSIXct(db$gpsData$UTC, tz = "GMT")
+  db$Listening_Effort$Status <- tolower(str_trim(db$Listening_Effort$Status))
+  db$DIFAR_Localisation$Species <- tolower(str_trim(db$DIFAR_Localisation$Species))
 
-  if(show.str) print(str(db))
+  if(verbose) print(str(db))
   invisible(db)
 }

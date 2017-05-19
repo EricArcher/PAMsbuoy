@@ -16,7 +16,11 @@ time (\code{UTC})}
 \item{buoy.data}{data.frame of buoy positions. Format depends on choice of
 \code{method}}
 
-\item{method}{method of position estimation to use}
+\item{method}{method of position estimation to use. \code{initial} chooses the
+earliest position, \code{interpolate} will interpolate within multiple
+positions (e.g., from GPS), and \code{drift} uses a drift model}
+
+\item{\dots}{arguments passed on to other functions}
 }
 \description{
 Return estimated position of buoys given a set of times
