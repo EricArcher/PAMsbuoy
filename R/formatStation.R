@@ -28,6 +28,16 @@ formatStation <- function(db) {
     split(., .$Buoy) %>%
     calculateOffset(position, db)
 
+  # a list of effort for each buoy
+  effort <- formatEffort(db)
+
+  # transpose to list of position, calibration, and effort for each buoy
+  buoys <- transpose(list(
+    position = position,
+    calibration = calibration,
+    effort = effort
+  ))
+
   # a list of each detection
   detections <- db$DIFAR_Localisation %>%
     filter(Species != "vessel") %>%
@@ -42,15 +52,5 @@ formatStation <- function(db) {
     ) %>%
     split(., .$detection)
 
-  effort <- db$Listening_Effort %>%
-    select(UTC, Status)
-
-  noise <- NULL
-
-  list(
-    buoys = transpose(list(position = position, calibration = calibration)),
-    detections = detections,
-    effort = effort,
-    noise = noise
-  )
+  list(buoys = buoys, detections = detections)
 }
