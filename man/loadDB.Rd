@@ -4,12 +4,18 @@
 \alias{loadDB}
 \title{Load DIFAR database}
 \usage{
-loadDB(fname = NULL, verbose = FALSE)
+loadDB(fname, verbose = FALSE)
 }
 \arguments{
-\item{fname}{filename of SQLite database with DIFAR data}
+\item{fname}{filename of SQLite database with DIFAR data. if \code{fname} is
+missing a dialog box will be presented to choose a filename}
 
-\item{verbose}{show database structure?}
+\item{verbose}{show database structure after loading?}
+}
+\value{
+a list of data frames representing all tables in the supplied
+  SQLite database. Date/time values in columns labelled \code{UTC} will be
+  converted to \code{POSIXct}
 }
 \description{
 Load list of data frames in DIFAR database

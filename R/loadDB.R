@@ -1,24 +1,27 @@
 #' @title Load DIFAR database
 #' @description Load list of data frames in DIFAR database
 #'
-#' @param fname filename of SQLite database with DIFAR data
-#' @param verbose show database structure?
+#' @param fname filename of SQLite database with DIFAR data. if \code{fname} is
+#'   missing a dialog box will be presented to choose a filename
+#' @param verbose show database structure after loading?
+#'
+#' @return a list of data frames representing all tables in the supplied
+#'   SQLite database. Date/time values in columns labelled \code{UTC} will be
+#'   converted to \code{POSIXct}
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
 #' @importFrom RSQLite dbConnect SQLite dbReadTable dbListTables dbDisconnect
 #' @export
 #'
-loadDB <- function(fname = NULL, verbose = FALSE) {
-  if(is.null(fname)) fname <- file.choose()
+loadDB <- function(fname, verbose = FALSE) {
+  if(missing(fname)) fname <- file.choose()
   con <- dbConnect(SQLite(), fname)
   db <- sapply(
     dbListTables(con),
     function(tbl) {
       df <- dbReadTable(con, tbl)
-      if("UTC" %in% colnames(df) & is.character(df$UTC)) {
-        df$UTC <- as.POSIXct(df$UTC, tz = "GMT")
-      }
+      if(is.character(df$UTC)) df$UTC <- as.POSIXct(df$UTC, tz = "GMT")
       df
     },
     USE.NAMES = TRUE,
