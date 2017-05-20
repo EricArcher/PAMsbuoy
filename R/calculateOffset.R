@@ -10,7 +10,6 @@
 #'
 #' @importFrom stats approx
 #' @importFrom swfscMisc bearing
-#' @export
 #'
 calculateOffset <- function(calibration, position, db) {
   # loop through buoys in calibration list

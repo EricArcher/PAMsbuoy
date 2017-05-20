@@ -5,8 +5,6 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
-#' @export
-#'
 labelDetection <- function(df) {
   grp <- df$MatchedAngles
   id <- as.character(df$Id)

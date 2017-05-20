@@ -12,6 +12,7 @@
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
 #' @importFrom RSQLite dbConnect SQLite dbReadTable dbListTables dbDisconnect
+#' @importFrom utils str
 #' @export
 #'
 loadDB <- function(fname, verbose = FALSE) {

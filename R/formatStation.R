@@ -7,10 +7,11 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
-#' @importFrom dplyr mutate select arrange filter rename
-#' @importFrom tidyr spread
+#' @importFrom dplyr mutate select arrange filter rename bind_rows bind_cols
+#' @importFrom magrittr %>%
 #' @importFrom purrr transpose
 #' @importFrom stringr str_trim
+#' @importFrom tidyr spread
 #' @export
 #'
 formatStation <- function(db) {
