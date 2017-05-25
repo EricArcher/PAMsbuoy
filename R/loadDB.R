@@ -17,6 +17,7 @@
 #'
 loadDB <- function(fname, verbose = FALSE) {
   if(missing(fname)) fname <- file.choose()
+  if(!file.exists(fname)) stop(paste0("file '", fname, "' cannot be found."))
   con <- dbConnect(SQLite(), fname)
   db <- sapply(
     dbListTables(con),
@@ -30,6 +31,7 @@ loadDB <- function(fname, verbose = FALSE) {
   )
   dbDisconnect(con)
   attr(db, "station") <- basename(fname)
+  if(length(db) == 0) stop("No tables loaded")
 
   db$Listening_Effort$Status <- tolower(str_trim(db$Listening_Effort$Status))
   db$DIFAR_Localisation$Species <- tolower(str_trim(db$DIFAR_Localisation$Species))

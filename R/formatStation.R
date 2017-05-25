@@ -27,7 +27,10 @@ formatStation <- function(db) {
 
   # a list of each detection
   detections = formatDetections(db, buoys)
-  list(buoys = buoys, detections = detections)
+  st <- list(buoys = buoys, detections = detections)
+
+  attr(st, "station") <- attr(db, "station")
+  st
 }
 
 #' @rdname formatStation

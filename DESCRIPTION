@@ -17,5 +17,7 @@ Imports:
     magrittr,
     purrr,
     stringr,
-    tidyr
+    tcltk,
+    tidyr,
+    tools
 RoxygenNote: 6.0.1
