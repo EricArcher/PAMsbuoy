@@ -136,7 +136,7 @@ formatDetections <- function(db, buoys) {
     mutate(detection = labelDetection(.)) %>%
     select(
       detection, Buoy, UTC, DIFARBearing, ClipLength, DifarFrequency,
-      SignalAmplitude, DifarGain
+      SignalAmplitude, DifarGain, Species
     ) %>%
     arrange(detection, Buoy, UTC)
 
