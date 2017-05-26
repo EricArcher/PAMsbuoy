@@ -31,7 +31,13 @@ loadDB <- function(fname, verbose = FALSE) {
   )
   dbDisconnect(con)
   attr(db, "station") <- basename(fname)
-  if(length(db) == 0) stop("No tables loaded")
+
+  # check for necessary tables
+  tbls <- c("DIFAR_Localisation", "Listening_Effort", "HydrophoneStreamers",
+            "Spectrogram_Annotation", "gpsData")
+  if(!all(tbls %in% names(db))) {
+    stop("Some necessary tables are missing in the database")
+  }
 
   db$Listening_Effort$Status <- tolower(str_trim(db$Listening_Effort$Status))
   db$DIFAR_Localisation$Species <- tolower(str_trim(db$DIFAR_Localisation$Species))
