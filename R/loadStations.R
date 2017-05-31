@@ -17,13 +17,18 @@ loadStations <- function(folder, verbose = TRUE, db.ext = "sqlite3") {
   if(missing(folder)) folder <- tcltk::tk_choose.dir()
   if(is.na(folder)) stop("No folder chosen")
 
+  log.fname <- "PAMsbuoy_loadStations_log.txt"
+  log <- file(err.fname, open = "wt")
+  sink(log, type = "message")
   fnames <- tools::list_files_with_exts(folder, exts = db.ext)
   fnames <- fnames[order(nchar(fnames), fnames)]
   st.list <- sapply(fnames, function(f) {
-    if(verbose) cat(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", f, "\n")
-    db <- loadDB(f, FALSE)
-    formatStation(db)
+    message(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", f)
+    formatStation(loadDB(f, FALSE))
   }, simplify = FALSE)
+  sink(type = "message")
+  file.show(log.fname)
+
   names(st.list) <- basename(names(st.list))
   attr(st.list, "survey") <- folder
   st.list

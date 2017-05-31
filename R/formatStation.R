@@ -91,6 +91,9 @@ formatBuoyEffort <- function(db) {
       select(Buoy, UTC, Status)
 
     first.on <- min(which(b.eff$Status == "on effort"))
+    if(first.on != 1) {
+      message("  first effort record for buoy ", b, " is not 'on effort'")
+    }
     b.eff <- b.eff[first.on:nrow(b.eff), ]
 
     good <- sapply(2:nrow(b.eff), function(i) {
@@ -100,10 +103,16 @@ formatBuoyEffort <- function(db) {
         b.eff$Status[i - 1] == "on effort"
       }
     })
+    if(any(!good)) {
+      message("  on and off effort records for buoy ", b, " are not alternating")
+    }
     good <- c(TRUE, good)
     b.eff <- b.eff[good, ]
 
     last.off <- b.eff$Status[nrow(b.eff)] == "off effort"
+    if(last.off != nrow(b.eff)) {
+      message("  last effort record for buoy ", b, " is not 'off effort'")
+    }
     while(!last.off) {
       b.eff <- b.eff[-nrow(b.eff), ]
       last.off <- b.eff$Status[nrow(b.eff)] == "off effort"
