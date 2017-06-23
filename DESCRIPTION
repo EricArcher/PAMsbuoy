@@ -12,5 +12,12 @@ Depends:
     R (>= 3.2.0)
 Imports:
     RSQLite,
-    swfscMisc
-RoxygenNote: 5.0.1.9000
+    swfscMisc,
+    dplyr,
+    magrittr,
+    purrr,
+    stringr,
+    tcltk,
+    tidyr,
+    tools
+RoxygenNote: 6.0.1
