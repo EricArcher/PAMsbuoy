@@ -64,9 +64,12 @@ formatBuoyEffort <- function(db) {
     filter(Status %in% c("on effort", "off effort")) %>%
     arrange(UTC) %>%
     select(UTC, Status)
-
+  typos <- grep("nosie|niose|nose", db$Spectrogram_Annotation$Note)
+  if(any(typos)) {
+    message("  possible misspelling of 'noise' in spectrogram annotation numbers: ", paste(typos, collapse=" "))
+  }
   noise.off <- db$Spectrogram_Annotation %>%
-    filter(Note == "noise") %>%
+    filter(grepl(c("noise"), Note)) %>% # change to 'noise|(typos...)' if we want to include typos
     mutate(Status = "off effort") %>%
     select(Channels, UTC, Duration, Status)
   noise.on <- noise.off %>%
