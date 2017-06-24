@@ -6,6 +6,7 @@
 \alias{formatBuoyCalibration}
 \alias{formatBuoyEffort}
 \alias{formatDetections}
+\alias{convertBinaryChannel}
 \title{Format Station Data}
 \usage{
 formatStation(db)
@@ -17,6 +18,8 @@ formatBuoyCalibration(db, position)
 formatBuoyEffort(db)
 
 formatDetections(db, buoys)
+
+convertBinaryChannel(x)
 }
 \arguments{
 \item{db}{list of data frames from PAMGuard SQLlite database}
@@ -28,3 +31,4 @@ Format data for a station from an list of tables read from
 \author{
 Eric Archer \email{eric.archer@noaa.gov}
 }
+\keyword{internal}

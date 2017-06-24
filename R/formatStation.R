@@ -12,12 +12,28 @@
 #' @importFrom purrr transpose
 #' @importFrom stringr str_trim
 #' @importFrom tidyr spread
+#' @importFrom stringdist stringsim
 #' @export
 #'
 formatStation <- function(db) {
   position <- formatBuoyPosition(db)
   calibration <- formatBuoyCalibration(db, position)
   effort <- formatBuoyEffort(db)
+
+  missing.buoys <- setdiff(names(position), names(calibration))
+  if(length(missing.buoys) > 0) {
+    for(b in missing.buoys) calibration[b] <- list(NULL)
+    calibration <- calibration[order(names(calibration))]
+    message("  no calibration records for buoys ", paste(missing.buoys, collapse = ", "))
+  }
+
+  missing.buoys <- setdiff(names(position), names(effort))
+  if(length(missing.buoys) > 0) {
+    for(b in missing.buoys) effort[b] <- list(NULL)
+    effort <- effort[order(names(effort))]
+    message("  no effort records for buoys ", paste(missing.buoys, collapse = ", "))
+  }
+
   # transpose to list of position, calibration, and effort for each buoy
   buoys <- transpose(list(
     position = position,
@@ -26,7 +42,7 @@ formatStation <- function(db) {
   ))
 
   # a list of each detection
-  detections = formatDetections(db, buoys)
+  detections <- formatDetections(db, buoys)
   st <- list(buoys = buoys, detections = detections)
 
   attr(st, "station") <- attr(db, "station")
@@ -60,13 +76,37 @@ formatBuoyCalibration <- function(db, position) {
 #' @rdname formatStation
 #'
 formatBuoyEffort <- function(db) {
+  buoys <- sort(unique(db$DIFAR_Localisation$Channel))
+
   eff <- db$Listening_Effort %>%
     filter(Status %in% c("on effort", "off effort")) %>%
     arrange(UTC) %>%
     select(UTC, Status)
+  if(nrow(eff) == 0) {
+    message("  no effort records")
+    null.eff <- lapply(buoys, function(x) NULL)
+    names(null.eff) <- buoys
+    return(null.eff)
+  }
+
+  # identify noise Notes
+  db$Spectrogram_Annotation <- db$Spectrogram_Annotation %>%
+    mutate(
+      Note = tolower(str_trim(Note)),
+      noise.sim = stringsim(Note, "noise"),
+      is.noise = noise.sim >= 0.8 | grepl("noise", Note)
+    )
+  i <- with(db$Spectrogram_Annotation, which(!is.noise & Note != ""))
+  if(length(i) > 0) {
+    message(
+      "  Spectrogram_Annotation records ",
+      paste(i, collapse = ", "),
+      " may have misspelled 'noise' Notes"
+    )
+  }
 
   noise.off <- db$Spectrogram_Annotation %>%
-    filter(Note == "noise") %>%
+    filter(is.noise) %>%
     mutate(Status = "off effort") %>%
     select(Channels, UTC, Duration, Status)
   noise.on <- noise.off %>%
@@ -78,12 +118,14 @@ formatBuoyEffort <- function(db) {
     arrange(Channels, UTC) %>%
     select(-Duration)
 
-  buoys <- sort(unique(db$DIFAR_Localisation$Channel))
-
   final.effort <- sapply(buoys, function(b) {
-    b.noise <- noise %>%
-      filter(Channels == b) %>%
-      select(-Channels)
+    b.noise <- noise
+    b.noise$is.buoy <- sapply(b.noise$Channels, function(x) {
+      any(convertBinaryChannel(x) == b)
+    })
+    b.noise <- b.noise %>%
+      filter(is.buoy) %>%
+      select(-Channels, -is.buoy)
 
     b.eff <- bind_rows(eff, b.noise) %>%
       arrange(UTC) %>%
@@ -151,6 +193,14 @@ formatDetections <- function(db, buoys) {
 
   detectionEffortStatus <- function(b, dt, buoys) {
     eff <- buoys[[b]]$effort
+    if(is.null(eff)) return(
+      data.frame(
+        effort.window = NA,
+        effort = NA,
+        effort.duration = NA,
+        stringsAsFactors = FALSE
+      )
+    )
     for(i in 1:nrow(eff)) {
       if(eff$on[i] <= dt & eff$off[i] >= dt) {
         return(data.frame(
@@ -180,4 +230,12 @@ formatDetections <- function(db, buoys) {
 
   bind_cols(detections, effort.status) %>%
     split(., .$detection)
+}
+
+#' @rdname formatStation
+#' @keywords internal
+#'
+convertBinaryChannel <- function(x) {
+  x <- as.integer(intToBits(x))[1:4]
+  which(x == 1) - 1
 }

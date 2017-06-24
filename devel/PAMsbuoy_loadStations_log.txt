@@ -1,45 +1,19 @@
-2017-05-30 22:42:22:sample survey/RTsonobuoy_1_15_09.sqlite3
-  first effort record for buoy 0 is not 'on effort'
+2017-06-23 23:31:36:final db formatting/FinalFormat_Station1.sqlite3
   on and off effort records for buoy 0 are not alternating
   last effort record for buoy 0 is not 'off effort'
+  on and off effort records for buoy 1 are not alternating
   last effort record for buoy 1 is not 'off effort'
-  first effort record for buoy 2 is not 'on effort'
+  on and off effort records for buoy 2 are not alternating
+  last effort record for buoy 2 is not 'off effort'
+  on and off effort records for buoy 3 are not alternating
+  last effort record for buoy 3 is not 'off effort'
+2017-06-23 23:31:37:final db formatting/FinalFormat_Station2.sqlite3
+  last effort record for buoy 0 is not 'off effort'
+  on and off effort records for buoy 1 are not alternating
+  last effort record for buoy 1 is not 'off effort'
   on and off effort records for buoy 2 are not alternating
   last effort record for buoy 2 is not 'off effort'
   last effort record for buoy 3 is not 'off effort'
-2017-05-30 22:42:24:sample survey/RTsonobuoy_1_15_09 2.sqlite3
-  first effort record for buoy 0 is not 'on effort'
-  on and off effort records for buoy 0 are not alternating
-  last effort record for buoy 0 is not 'off effort'
-  last effort record for buoy 1 is not 'off effort'
-  first effort record for buoy 2 is not 'on effort'
-  on and off effort records for buoy 2 are not alternating
-  last effort record for buoy 2 is not 'off effort'
-  last effort record for buoy 3 is not 'off effort'
-2017-05-30 22:42:25:sample survey/RTsonobuoy_1_15_09 3.sqlite3
-  first effort record for buoy 0 is not 'on effort'
-  on and off effort records for buoy 0 are not alternating
-  last effort record for buoy 0 is not 'off effort'
-  last effort record for buoy 1 is not 'off effort'
-  first effort record for buoy 2 is not 'on effort'
-  on and off effort records for buoy 2 are not alternating
-  last effort record for buoy 2 is not 'off effort'
-  last effort record for buoy 3 is not 'off effort'
-2017-05-30 22:42:27:sample survey/RTsonobuoy_1_15_09 4.sqlite3
-  first effort record for buoy 0 is not 'on effort'
-  on and off effort records for buoy 0 are not alternating
-  last effort record for buoy 0 is not 'off effort'
-  last effort record for buoy 1 is not 'off effort'
-  first effort record for buoy 2 is not 'on effort'
-  on and off effort records for buoy 2 are not alternating
-  last effort record for buoy 2 is not 'off effort'
-  last effort record for buoy 3 is not 'off effort'
-2017-05-30 22:42:29:sample survey/RTsonobuoy_1_15_09 5.sqlite3
-  first effort record for buoy 0 is not 'on effort'
-  on and off effort records for buoy 0 are not alternating
-  last effort record for buoy 0 is not 'off effort'
-  last effort record for buoy 1 is not 'off effort'
-  first effort record for buoy 2 is not 'on effort'
-  on and off effort records for buoy 2 are not alternating
-  last effort record for buoy 2 is not 'off effort'
-  last effort record for buoy 3 is not 'off effort'
+  no calibration records for buoys 2
+2017-06-23 23:31:38:final db formatting/FinalFormat_Station3.sqlite3
+  no effort records

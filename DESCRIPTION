@@ -16,6 +16,7 @@ Imports:
     dplyr,
     magrittr,
     purrr,
+    stringdist,
     stringr,
     tcltk,
     tidyr,
