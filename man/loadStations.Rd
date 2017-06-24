@@ -4,13 +4,11 @@
 \alias{loadStations}
 \title{Load Multiple Stations}
 \usage{
-loadStations(folder, verbose = TRUE, db.ext = "sqlite3")
+loadStations(folder, db.ext = "sqlite3")
 }
 \arguments{
 \item{folder}{folder containing SQLite databases with DIFAR data. if missing
 a dialog box will be presented to choose a folder}
-
-\item{verbose}{show station loading progress and summary after loading?}
 }
 \value{
 a list of sonobuoy stations
