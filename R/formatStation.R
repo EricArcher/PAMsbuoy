@@ -189,7 +189,8 @@ formatDetections <- function(db, buoys) {
       detection, Buoy, UTC, DIFARBearing, ClipLength, DifarFrequency,
       SignalAmplitude, DifarGain, Species
     ) %>%
-    arrange(detection, Buoy, UTC)
+    arrange(detection, Buoy, UTC) # %>%
+    # applyCalibration(buoys)
 
   detectionEffortStatus <- function(b, dt, buoys) {
     eff <- buoys[[b]]$effort
