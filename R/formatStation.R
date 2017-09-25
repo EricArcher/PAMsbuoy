@@ -12,7 +12,7 @@
 #' @importFrom purrr transpose
 #' @importFrom stringr str_trim
 #' @importFrom tidyr spread
-#' @importFrom stringdist stringsim
+## @importFrom stringdist stringsim
 #' @export
 #'
 formatStation <- function(db) {
@@ -90,20 +90,20 @@ formatBuoyEffort <- function(db) {
   }
 
   # identify noise Notes
-  db$Spectrogram_Annotation <- db$Spectrogram_Annotation %>%
-    mutate(
-      Note = tolower(str_trim(Note)),
-      noise.sim = stringsim(Note, "noise"),
-      is.noise = noise.sim >= 0.8 | grepl("noise", Note)
-    )
-  i <- with(db$Spectrogram_Annotation, which(!is.noise & Note != ""))
-  if(length(i) > 0) {
-    message(
-      "  Spectrogram_Annotation records ",
-      paste(i, collapse = ", "),
-      " may have misspelled 'noise' Notes"
-    )
-  }
+  # db$Spectrogram_Annotation <- db$Spectrogram_Annotation %>%
+  #   mutate(
+  #     Note = tolower(str_trim(Note)),
+  #     noise.sim = stringsim(Note, "noise"),
+  #     is.noise = noise.sim >= 0.8 | grepl("noise", Note)
+  #   )
+  # i <- with(db$Spectrogram_Annotation, which(!is.noise & Note != ""))
+  # if(length(i) > 0) {
+  #   message(
+  #     "  Spectrogram_Annotation records ",
+  #     paste(i, collapse = ", "),
+  #     " may have misspelled 'noise' Notes"
+  #   )
+  # }
 
   noise.off <- db$Spectrogram_Annotation %>%
     filter(is.noise) %>%

@@ -16,7 +16,7 @@ calculateOffset <- function(calibration, position, db) {
   for(b in names(calibration)) {
     b.cal <- calibration[[b]]
     # get buoy position
-    buoy.pos <- buoyPosition(b.cal, position)
+    buoy.pos <- buoyPosition(b.cal, position, method='initial')
     # get ship position at calibration point times
     ship.pos <- estimatePosition(b.cal$UTC, db$gpsData)
     # calculate true bearing from buoy to ship for each set of positions
