@@ -33,9 +33,9 @@ formatStation <- function(db) {
     effort <- effort[order(names(effort))]
     message("  no effort records for buoys ", paste(missing.buoys, collapse = ", "))
   }
-
+  browser()
   # transpose to list of position, calibration, and effort for each buoy
-  buoys <- transpose(list(
+  buoys <- purrr::transpose(list(
     position = position,
     calibration = calibration,
     effort = effort
@@ -64,6 +64,7 @@ formatBuoyPosition <- function(db) {
 #'
 formatBuoyCalibration <- function(db, position) {
   # a list of calibration data for each buoy
+  browser()
   db$DIFAR_Localisation %>%
     filter(Species == "vessel") %>%
     mutate(Buoy = as.character(Channel)) %>%
@@ -90,20 +91,21 @@ formatBuoyEffort <- function(db) {
   }
 
   # identify noise Notes
-  # db$Spectrogram_Annotation <- db$Spectrogram_Annotation %>%
-  #   mutate(
-  #     Note = tolower(str_trim(Note)),
-  #     noise.sim = stringsim(Note, "noise"),
-  #     is.noise = noise.sim >= 0.8 | grepl("noise", Note)
-  #   )
-  # i <- with(db$Spectrogram_Annotation, which(!is.noise & Note != ""))
-  # if(length(i) > 0) {
-  #   message(
-  #     "  Spectrogram_Annotation records ",
-  #     paste(i, collapse = ", "),
-  #     " may have misspelled 'noise' Notes"
-  #   )
-  # }
+  db$Spectrogram_Annotation <- db$Spectrogram_Annotation %>%
+    mutate(
+      Note = tolower(str_trim(Note)),
+      # noise.sim = stringsim(Note, "noise"),
+      # is.noise = noise.sim >= 0.8 | grepl("noise", Note)
+      is.noise = grepl('noise', Note)
+    )
+  i <- with(db$Spectrogram_Annotation, which(!is.noise & Note != ""))
+  if(length(i) > 0) {
+    message(
+      "  Spectrogram_Annotation records ",
+      paste(i, collapse = ", "),
+      " may have misspelled 'noise' Notes"
+    )
+  }
 
   noise.off <- db$Spectrogram_Annotation %>%
     filter(is.noise) %>%
@@ -229,8 +231,8 @@ formatDetections <- function(db, buoys) {
     USE.NAMES = FALSE
   ) %>% bind_rows
 
-  bind_cols(detections, effort.status) %>%
-    split(., .$detection)
+  bind_cols(detections, effort.status) # %>%
+    # split(., .$detection)
 }
 
 #' @rdname formatStation
