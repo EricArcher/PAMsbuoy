@@ -5,10 +5,12 @@ library(ggplot2)
 library(swfscMisc)
 library(plotly)
 library(viridisLite)
+library(R.utils)
 # source('~/R Projects/SWFSC/PAMsbuoy/devel/drawBearing.R')
 source('../PAMsbuoy/devel/drawBearing.R')
-source('loadGpsDifar.R')
-source('driftFunctions.R')
+sourceDirectory('../PAMsbuoy/R/')
+source('../SonoBuoy/loadGpsDifar.R')
+source('../SonoBuoy/driftFunctions.R')
 
 # drift testing area
 
@@ -52,12 +54,12 @@ grid <- sample_frac(grid, size=.2)
 mat <- t(matrix(grid$value, length(unique(grid$phi)), length(unique(grid$rate))))
 plot_ly(z=-log(mat)) %>% add_surface()
 
-drift <- calculateDrift(filtStart, 
+drift <- calculateDrift(filtStart,
                         filtDifar %>% filter(Species=='Vessel'))
 
-endPoint <- destPoint(c(filtStart$Longitude, filtStart$Latitude), drift$par[2], 
+endPoint <- destPoint(c(filtStart$Longitude, filtStart$Latitude), drift$par[2],
                       drift$par[1] * difftime(slice(filtDifar, n())$UTC, filtStart$UTC, units='secs') * 1000 / 3600)
 
-difar %>% ggplot() + geom_point(aes(x=Longitude, y=Latitude, color='Boat')) + 
+difar %>% ggplot() + geom_point(aes(x=Longitude, y=Latitude, color='Boat')) +
       geom_point(aes(x=BuoyLongitude, y=BuoyLatitude, color=as.factor(Channel))) +
       geom_segment(aes(x=filtStart$Longitude, y=filtStart$Latitude, xend=endPoint[1], yend=endPoint[2]))

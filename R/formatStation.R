@@ -33,7 +33,7 @@ formatStation <- function(db) {
     effort <- effort[order(names(effort))]
     message("  no effort records for buoys ", paste(missing.buoys, collapse = ", "))
   }
-  browser()
+
   # transpose to list of position, calibration, and effort for each buoy
   buoys <- purrr::transpose(list(
     position = position,
@@ -64,7 +64,6 @@ formatBuoyPosition <- function(db) {
 #'
 formatBuoyCalibration <- function(db, position) {
   # a list of calibration data for each buoy
-  browser()
   db$DIFAR_Localisation %>%
     filter(Species == "vessel") %>%
     mutate(Buoy = as.character(Channel)) %>%

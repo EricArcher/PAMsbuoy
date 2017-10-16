@@ -29,7 +29,9 @@ calculateOffset <- function(calibration, position, db) {
     b.cal <- cbind(
       b.cal,
       magnetic.variation = ship.pos$MagneticVariation,
-      true.bearing = apply(true.bearing, 2, mean)
+      true.bearing = apply(true.bearing, 2, mean),
+      BoatLatitude = ship.pos$Latitude,
+      BoatLongitude = ship.pos$Longitude
     )
     # calculate offset = true - difar bearing
     b.cal$offset <- b.cal$true.bearing - b.cal$DIFARBearing
