@@ -12,7 +12,7 @@
 #' @importFrom purrr transpose
 #' @importFrom stringr str_trim
 #' @importFrom tidyr spread
-## @importFrom stringdist stringsim
+#' @importFrom stringdist stringsim
 #' @export
 #'
 formatStation <- function(db) {
@@ -77,25 +77,14 @@ formatBuoyCalibration <- function(db, position) {
 #'
 formatBuoyEffort <- function(db) {
   buoys <- sort(unique(db$DIFAR_Localisation$Channel))
-
-  eff <- db$Listening_Effort %>%
-    filter(Status %in% c("on effort", "off effort")) %>%
-    arrange(UTC) %>%
-    select(UTC, Status)
-  if(nrow(eff) == 0) {
-    message("  no effort records")
-    null.eff <- lapply(buoys, function(x) NULL)
-    names(null.eff) <- buoys
-    return(null.eff)
-  }
+  buoys <- sort(unique(db$HydrophoneStreamers$StreamerIndex))
 
   # identify noise Notes
   db$Spectrogram_Annotation <- db$Spectrogram_Annotation %>%
     mutate(
       Note = tolower(str_trim(Note)),
-      # noise.sim = stringsim(Note, "noise"),
-      # is.noise = noise.sim >= 0.8 | grepl("noise", Note)
-      is.noise = grepl('noise', Note)
+      noise.sim = stringsim(Note, "noise"),
+      is.noise = noise.sim >= 0.8 | grepl("noise", Note)
     )
   i <- with(db$Spectrogram_Annotation, which(!is.noise & Note != ""))
   if(length(i) > 0) {
@@ -119,6 +108,11 @@ formatBuoyEffort <- function(db) {
     arrange(Channels, UTC) %>%
     select(-Duration)
 
+  eff <- db$Listening_Effort %>%
+    filter(Status %in% c("on effort", "off effort")) %>%
+    arrange(UTC) %>%
+    select(UTC, Status, Channels)
+
   final.effort <- sapply(buoys, function(b) {
     b.noise <- noise
     b.noise$is.buoy <- sapply(b.noise$Channels, function(x) {
@@ -128,38 +122,62 @@ formatBuoyEffort <- function(db) {
       filter(is.buoy) %>%
       select(-Channels, -is.buoy)
 
-    b.eff <- bind_rows(eff, b.noise) %>%
+    b.eff <- eff %>%
+      mutate(is.buoy = sapply(Channels, function(x) {
+        any(convertBinaryChannel(x) == b)
+      })) %>%
+      filter(is.buoy) %>%
+      select(-Channels, -is.buoy)
+
+    if(nrow(b.eff)==0) {
+      return(NULL)
+    }
+
+    if(nrow(b.eff)==1) {
+      message('  buoy ', b, ' has only one effort record')
+    }
+
+    b.eff <- bind_rows(b.eff, b.noise) %>%
       arrange(UTC) %>%
       mutate(Buoy = b) %>%
       select(Buoy, UTC, Status)
 
-    first.on <- min(which(b.eff$Status == "on effort"))
-    if(first.on != 1) {
+    ons <- which(b.eff$Status == "on effort")
+    if(length(ons)==0) {
+      message('  no "on effort" records for buoy ', b)
+      return(NULL)
+    }
+    if(min(ons) != 1) {
       message("  first effort record for buoy ", b, " is not 'on effort'")
     }
-    b.eff <- b.eff[first.on:nrow(b.eff), ]
+    b.eff <- b.eff[min(ons):nrow(b.eff), ]
 
-    good <- sapply(2:nrow(b.eff), function(i) {
-      if(b.eff$Status[i] == "on effort") {
-        b.eff$Status[i - 1] == "off effort"
-      } else {
-        b.eff$Status[i - 1] == "on effort"
-      }
-    })
+    if(nrow(b.eff)==1) {
+      good <- TRUE
+    } else {
+      good <- sapply(2:nrow(b.eff), function(i) {
+        if(b.eff$Status[i] == "on effort") {
+          b.eff$Status[i - 1] == "off effort"
+        } else {
+          b.eff$Status[i - 1] == "on effort"
+        }
+      })
+      good <- c(TRUE, good)
+    }
     if(any(!good)) {
       message("  on and off effort records for buoy ", b, " are not alternating")
     }
-    good <- c(TRUE, good)
     b.eff <- b.eff[good, ]
 
-    last.off <- b.eff$Status[nrow(b.eff)] == "off effort"
-    if(last.off != nrow(b.eff)) {
-      message("  last effort record for buoy ", b, " is not 'off effort'")
+    offs <- which(b.eff$Status == 'off effort')
+    if(length(offs)==0) {
+      message('  no "off effort" records for buoy ', b)
+      return(NULL)
     }
-    while(!last.off) {
-      b.eff <- b.eff[-nrow(b.eff), ]
-      last.off <- b.eff$Status[nrow(b.eff)] == "off effort"
+    if(max(offs) != nrow(b.eff)) {
+      message(' last effort record for buoy ', b, ' is not "off effort"')
     }
+    b.eff <- b.eff[1:max(offs),]
 
     b.eff %>%
       mutate(
@@ -171,9 +189,10 @@ formatBuoyEffort <- function(db) {
       mutate(duration = difftime(off, on, units = "secs")) %>%
       select(Buoy, on, off, duration)
   }, simplify = FALSE)
+
   names(final.effort) <- buoys
 
-  final.effort
+  Filter(Negate(is.null), final.effort)
 }
 
 #' @rdname formatStation
@@ -190,8 +209,7 @@ formatDetections <- function(db, buoys) {
       detection, Buoy, UTC, DIFARBearing, ClipLength, DifarFrequency,
       SignalAmplitude, DifarGain, Species
     ) %>%
-    arrange(detection, Buoy, UTC) # %>%
-    # applyCalibration(buoys)
+    arrange(detection, Buoy, UTC)
 
   detectionEffortStatus <- function(b, dt, buoys) {
     eff <- buoys[[b]]$effort
