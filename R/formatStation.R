@@ -145,12 +145,12 @@ formatBuoyEffort <- function(db) {
     ons <- which(b.eff$Status == "on effort")
     if(length(ons)==0) {
       message('  no "on effort" records for buoy ', b)
-      return(NULL)
+    } else {
+      if(min(ons) != 1) {
+        message("  first effort record for buoy ", b, " is not 'on effort'")
+      }
+      b.eff <- b.eff[min(ons):nrow(b.eff), ]
     }
-    if(min(ons) != 1) {
-      message("  first effort record for buoy ", b, " is not 'on effort'")
-    }
-    b.eff <- b.eff[min(ons):nrow(b.eff), ]
 
     if(nrow(b.eff)==1) {
       good <- TRUE
@@ -172,16 +172,18 @@ formatBuoyEffort <- function(db) {
     offs <- which(b.eff$Status == 'off effort')
     if(length(offs)==0) {
       message('  no "off effort" records for buoy ', b)
-      return(NULL)
+    } else {
+      if(max(offs) != nrow(b.eff)) {
+        message(' last effort record for buoy ', b, ' is not "off effort"')
+      }
+      b.eff <- b.eff[1:max(offs),]
     }
-    if(max(offs) != nrow(b.eff)) {
-      message(' last effort record for buoy ', b, ' is not "off effort"')
-    }
-    b.eff <- b.eff[1:max(offs),]
+    browser()
+    # Want a clean way of doing this if nrow=1. Doesnt work with vector result, just giving false[1]
 
     b.eff %>%
       mutate(
-        effort.id = rep(1:(n() / 2), each = 2),
+        effort.id = ifelse(nrow(b.eff)==1, 1, rep(1:(n() / 2), each = 2)),
         Status = gsub(" ", ".", Status)
       ) %>%
       spread(Status, UTC) %>%
