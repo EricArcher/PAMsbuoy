@@ -22,7 +22,7 @@
 #' @importFrom ggplot2 geom_segment
 #' @export
 #'
-drawBearings <- function(df, plot, distance=4, ...) {
+drawBearings <- function(df, plot, distance=1, ...) {
     data <- df  # Doing this because geom_ was getting angry using data=df, may try to fix later
     endcoord <- t(mapply(destination, data$Latitude, data$Longitude, data$DIFARBearing, distance, units='km'))
     data$endlat <- endcoord[,1]

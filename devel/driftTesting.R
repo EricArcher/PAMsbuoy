@@ -6,16 +6,22 @@ library(swfscMisc)
 library(plotly)
 library(viridisLite)
 library(R.utils)
+library(PAMsbuoy)
 # source('~/R Projects/SWFSC/PAMsbuoy/devel/drawBearing.R')
 source('../PAMsbuoy/devel/drawBearing.R')
-sourceDirectory('../PAMsbuoy/R/')
+# sourceDirectory('../PAMsbuoy/R/')
 source('../SonoBuoy/loadGpsDifar.R')
 source('../SonoBuoy/driftFunctions.R')
 
 # drift testing area
+pamDb <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_PB_Edited.sqlite3')
+pamDifar <- formatStation(pamDb)
 
-difar <- loadGpsDifar('./Data/PAST_20160607_POST_PB_Edited.sqlite3', buoyfunc=firstTrialId, buoylocs = './Data/spot_messages_RUST_JLK.csv')
-cals <- loadGpsDifar('./Data/PAST_20160607_POST_VesselCalOnly.sqlite3', buoyfunc=firstTrialId, buoylocs= './Data/spot_messages_RUST_JLK.csv')
+otherDb <- loadDB('./devel/final db formatting/FinalFormat_Station1.sqlite3')
+otherDifar <- formatStation(otherDb)
+
+difar <- loadGpsDifar('../SonoBuoy/Data/PAST_20160607_POST_PB_Edited.sqlite3', buoyfunc=firstTrialId, buoylocs = '../SonoBuoy/Data/spot_messages_RUST_JLK.csv')
+cals <- loadGpsDifar('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3', buoyfunc=firstTrialId, buoylocs= '../SonoBuoy/Data/spot_messages_RUST_JLK.csv')
 difar <- rbind(cals, difar)
 start <- do.call(rbind, by(difar, difar$Channel, function(x) {
       arrange(x, UTC) %>% head(1)
