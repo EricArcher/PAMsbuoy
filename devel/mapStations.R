@@ -2,7 +2,7 @@
 #' @title Create a Summary Map of All Sonobuoy Stations
 #' @description Return a ggmap object showing all sonobuoy stations.
 #'
-#' @param stationList list of sonobuoy stations returned by formatStation
+#' @param stationList list of sonobuoy stations returned by loadStations
 #' @param zoom zoom level used for the map
 #'
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
