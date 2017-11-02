@@ -36,7 +36,8 @@ loadDB <- function(fname, verbose = FALSE) {
   tbls <- c("DIFAR_Localisation", "Listening_Effort", "HydrophoneStreamers",
             "Spectrogram_Annotation", "gpsData")
   if(!all(tbls %in% names(db))) {
-    stop("Some necessary tables are missing in the database")
+    stop(paste("Some necessary tables are missing in database ", fname,'. \n',
+               'Missing tables are: ', paste(tbls[!(tbls %in% names(db))], collapse=' ')))
   }
 
   db$Listening_Effort$Status <- tolower(str_trim(db$Listening_Effort$Status))

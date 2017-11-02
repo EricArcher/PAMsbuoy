@@ -15,3 +15,6 @@
 
 # For plotting of a station we want to be able to show localizations and possibly
 # the location of the ship
+
+# Possible we want to check 'DifarModuleAction == deployed' in HydrophoneStreamers table for buoy position
+# Seems like it would avoid random entries
