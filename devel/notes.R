@@ -17,4 +17,9 @@
 # the location of the ship
 
 # Possible we want to check 'DifarModuleAction == deployed' in HydrophoneStreamers table for buoy position
-# Seems like it would avoid random entries
+# Seems like it would avoid random entries. Maybe only if it exists? It doesnt in calcurceas
+
+# Probably want warnings about multiple deployment position records for buoys. Station 2 and 3 have a bunch of weird
+# shit (lasker) in the streamers table. Looks like stuff got split between two dbs over the days.
+
+# Progress updates on loadStations - calcurceas taking a long time, would be good to know how far along we are.
