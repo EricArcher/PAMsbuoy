@@ -1,29 +1,25 @@
-speciesMap <- function(stationList, species, ...) {
-  speciesData <- do.call(rbind, lapply(stationList, function(s) {
-    specs <- s$detections %>% mutate(Station = gsub('(.*)\\..*', '\\1', attr(s, 'station')))
-    cbind(specs, buoyPosition(specs, transpose(s$buoys)$position))
-  }))
-  rownames(speciesData) <- c()
-  specList <- unique(speciesData$Species)
-  buoyList <- unique(speciesData$Buoy)
-}
 
 
 
-new <- do.call(rbind, lapply(calCur, function(s) {
-  specs <- s$detections %>%
-    mutate(Station = gsub('(.*)\\..*', '\\1', attr(s, 'station')))
-  if(nrow(specs) > 0) {
-    specs <- cbind(specs, buoyPosition(specs, transpose(s$buoys)$position))
-  }
-  specs}))
-rownames(new) <- c()
-specList <- unique(new$Species)
-buoyList <- unique(new$Buoy)
+calSum <- speciesSummary(calCur)
 
-# This isn't done by station at all, but seems to work. Need to think.
-test <- sapply(specList, function(s) {
-  sapply(buoyList, function(b) {
-    sum((new$Species==s) & (new$Buoy==b))})
-})
+calMap <- getMap(calSum)
+
+calToUse <- filter(calSum, Species=='bp')
+
+calToUse <- calSum %>% group_by(Station, Species) %>%
+  summarise(Latitude=median(Latitude), Longitude=median(Longitude),
+            Count = sum(Count)) %>% data.frame() %>%
+  filter(Species == 'bmb')
+
+sd <- sd(calToUse$Count)
+breaks <- seq(0, max(calToUse$Count)+sd, sd)
+calToUse$Breaks <- cut(calToUse$Count, breaks, ordered_result = TRUE, include.lowest = TRUE)
+
+calMap + geom_point(data=filter(calToUse, Count > 0), aes(x=Longitude, y=Latitude, color=Breaks), size=3) +
+  geom_point(data=filter(calToUse, Count==0), aes(x=Longitude, y=Latitude), shape=4, color='red', size=3) +
+  facet_wrap(~Species, nrow=2) +
+  # scale_color_gradientn(colors=viridis(256, option='inferno', direction=-1))
+  scale_color_brewer(palette='YlOrRd')
+
 

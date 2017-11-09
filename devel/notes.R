@@ -23,3 +23,10 @@
 # shit (lasker) in the streamers table. Looks like stuff got split between two dbs over the days.
 
 # Progress updates on loadStations - calcurceas taking a long time, would be good to know how far along we are.
+
+# Species summary provides detection for each buoy, but isnt trying to match them up to say 'these two calls on
+# these buoys are the same call' using MatchedAngles or whatever Eric has it called.
+
+# For species maps may want to also show histogram of counts by species or something. If there are a few big
+# detections (there are), then the color scale will always be shit. Also might want to bin things, not
+# sure how we would decide the bin sizes. Have it going this way now.
