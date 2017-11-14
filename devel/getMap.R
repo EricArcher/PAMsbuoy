@@ -21,8 +21,8 @@ getMap <- function(positions, force=FALSE, zoom=10) {
     stop('It looks like you are near one of the poles. Automatic mapping not yet supported here. Sorry!')
   }
   # If we tried to zoome out this far something bad happened.
-  if(zoom==0) {
-    stop('Zoom is 0. Check coordinates for errors.')
+  if(zoom<2) {
+    stop('Cannot use Zoom 0 or 1. Check coordinates for errors.')
   }
   # Get our map with smallest bounding box
   boundLong <- range(positions$Longitude)
