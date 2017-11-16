@@ -20,5 +20,8 @@ Imports:
     stringr,
     tcltk,
     tidyr,
-    tools
+    tools,
+    ggmap,
+    ggplot2,
+    RColorBrewer
 RoxygenNote: 6.0.1
