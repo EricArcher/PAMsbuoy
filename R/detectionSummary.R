@@ -8,7 +8,7 @@
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
 #' @import dplyr
-#' @importFrom tidyr gather
+#' @importFrom tidyr gather_
 #' @export
 #'
 detectionSummary <- function(stationList) {
@@ -34,9 +34,14 @@ detectionSummary <- function(stationList) {
         st[i, sp] <- filter(detectionData, Species == sp,
                             Buoy == st$Buoy[i],
                             Station == st$Station[i]) %>% nrow()
+        st[i, paste0('unique_', sp)] <- filter(detectionData, Species == sp,
+                                               Station == st$Station[i]) %>% distinct(detection) %>% nrow()
       }
     }
     st}))
   rownames(detSummary) <- c()
-  gather(detSummary, Species, Count, !! specList)
+  gather_(detSummary, 'Species', 'Count', specList) %>%
+    gather_('USpecies', 'UniqueCount', paste0('unique_', specList)) %>%
+    mutate_('USpecies' = ~ gsub('unique_', '', USpecies)) %>%
+    filter_('USpecies==Species') %>% select_('-USpecies')
 }

@@ -6,14 +6,18 @@
 #' @param detectionData a dataframe with data on detections. Must have columns
 #'    \code{Latitude}, \code{Longitude}, \code{Station}, and \code{Count}. Must
 #'    also have column \code{Species} unless bySpecies is \code{'none'}
-#' @param bySpecies The different species to group the counts by. If \code{'none'},
-#'    will group all detections together. If \code{'all'}, will show maps for all species.
-#'    Can also accept a vector of individual species to be graphed.
+#' @param species The species to look at. Either a vector of specific species, or
+#'    \code{'all'} to use all species.
+#' @param combine Should the counts for the selected species be combined. If
+#'    \code{FALSE}, graph will be faceted for each species.
+#' @param value column name of values to plot
 #' @param map Optional, a ggmap object to plot on. If left as NULL, will be created by the
 #'    getMap function. Can be included to reduce calls to getMap.
 #' @param size Size of points to be plotted
 #' @param nrow number of rows when plotting multiple species
 #' @param palette color palette to be used, see brewer.pal for more info
+#' @param nGroups the number of different groups to use for coloring. Groups will be
+#'    evenly spaced between 0 and max number of detections.
 #'
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
@@ -22,42 +26,66 @@
 #' @importFrom RColorBrewer brewer.pal
 #' @export
 #'
-mapDetections <- function(detectionData, bySpecies='all', map=NULL, size=3, nrow=2, palette='Reds') {
+mapDetections <- function(detectionData, species='all', combine=TRUE, value='Count', map=NULL,
+                          size=3, nrow=1, palette='Reds', nGroups=6) {
   if(is.null(map)) {
     detectionMap <- getMap(detectionData)
   } else {
     detectionMap <- map
   }
-  mapData <- if(all(bySpecies %in% 'none')) {
-    detectionData %>% group_by(Station) %>%
-      summarise(Latitude = median(Latitude), Longitude = median(Longitude),
-                Count = sum(Count)) %>% data.frame() %>%
-      mutate(Species = 'All Species')
-  } else if(all(bySpecies %in% 'all')) {
-    detectionData %>% group_by(Station, Species) %>%
-      summarise(Latitude = median(Latitude), Longitude = median(Longitude),
-                Count = sum(Count)) %>% data.frame()
-  } else if(all(bySpecies %in% unique(detectionData$Species))) {
-    detectionData %>% group_by(Station, Species) %>%
-      summarise(Latitude = median(Latitude), Longitude = median(Longitude),
-                Count = sum(Count)) %>% data.frame() %>%
-      filter(Species %in% bySpecies)
+
+  detectionData$PlotMe <- detectionData[[value]]
+
+  detectionData <- if(all(species %in% 'all')) {
+    detectionData
+  } else if(all(species %in% unique(detectionData$Species))) {
+    filter(detectionData, Species %in% species)
   } else {
-    stop(paste('bySpecies argument', paste(bySpecies, collapse=' '), 'is not valid'))
+    stop(paste('species argument ', paste(species, collapse=' '), 'is invalid.'))
   }
 
-  sd <- round(sd(mapData$Count))
-  breaks <- seq(0, max(mapData$Count)+sd, sd)
+  mapData <- if(combine) {
+    detectionData %>% group_by(Station) %>%
+      summarise(Longitude=median(Longitude), Latitude=median(Latitude),
+                Count=sum(PlotMe)) %>% data.frame() %>%
+      mutate(Species = paste(species, collapse=' '))
+  } else {
+    detectionData %>% group_by(Station, Species) %>%
+      summarise(Longitude=median(Longitude), Latitude=median(Latitude),
+                Count=max(PlotMe)) %>% data.frame()
+  }
+
+  # mapData <- if(all(bySpecies %in% 'none')) {
+  #   detectionData %>% group_by(Station) %>%
+  #     summarise(Latitude = median(Latitude), Longitude = median(Longitude),
+  #               Count = sum(PlotMe)) %>% data.frame() %>%
+  #     mutate(Species = 'All Species')
+  # } else if(all(bySpecies %in% 'all')) {
+  #   detectionData %>% group_by(Station, Species) %>%
+  #     summarise(Latitude = median(Latitude), Longitude = median(Longitude),
+  #               Count = sum(PlotMe)) %>% data.frame()
+  # } else if(all(bySpecies %in% unique(detectionData$Species))) {
+  #   detectionData %>% group_by(Station, Species) %>%
+  #     summarise(Latitude = median(Latitude), Longitude = median(Longitude),
+  #               Count = sum(PlotMe)) %>% data.frame() %>%
+  #     filter(Species %in% bySpecies)
+  # } else {
+  #   stop(paste('bySpecies argument', paste(bySpecies, collapse=' '), 'is not valid'))
+  # }
+
+  # sd <- round(sd(mapData$Count))
+  # breaks <- seq(0, max(mapData$Count)+sd, sd)
+  breaks <- seq(0, max(mapData$Count), length.out=nGroups+1)
   breaks[1] <- 1
-  breaks <- c(0, breaks)
+  breaks <- round(c(0, breaks))
   breaks[length(breaks)] <- min(breaks[length(breaks)], max(mapData$Count))
   breaks <- unique(breaks)
-  mapData$Breaks <- cut(mapData$Count, breaks, ordered_result = TRUE, include.lowest = TRUE, right=FALSE)
+  mapData$Breaks <- cut(mapData$Count, breaks, ordered_result = TRUE, include.lowest = TRUE, right=FALSE, dig.lab=4)
   haveLevels <- sort(as.numeric(unique(mapData$Breaks)))
   haveLabels <- c('0', levels(mapData$Breaks)[-1])[haveLevels]
   haveLabels <- gsub('(\\[|\\]|\\(|\\))', '', haveLabels)
   haveLabels <- gsub(',', ' to ', haveLabels)
-  myPalette <- c('red', brewer.pal(length(breaks)-2, palette))
+  myPalette <- c('red', brewer.pal(nGroups, palette))
   usePalette <- myPalette[haveLevels]
 
   detectionMap + geom_point(data=mapData, aes(x=Longitude, y=Latitude, color=Breaks, shape=Count==0), size=size) +
