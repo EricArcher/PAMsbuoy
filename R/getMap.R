@@ -25,6 +25,7 @@ getMap <- function(positions, force=FALSE, zoom=10) {
     stop('Cannot use Zoom 0 or 1. Check coordinates for errors.')
   }
   # Get our map with smallest bounding box
+  positions <- fixDateline(positions)
   boundLong <- range(positions$Longitude)
   boundLat <- range(positions$Latitude)
   suppressMessages(map <- get_map(location = c(lon=mean(boundLong), lat=mean(boundLat)), zoom=zoom))

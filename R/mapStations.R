@@ -21,19 +21,12 @@ mapStations <- function(stationList, zoom='auto', crop=FALSE) {
       buoyDat
     }))
   }))
+
+  # Checking if we are crossing the dateline
+  buoyPositions <- fixDateline(buoyPositions)
   boundLong <- range(buoyPositions$Longitude)
   boundLat <- range(buoyPositions$Latitude)
-  # Checking if we are crossing the dateline. When grabbing map later the coordinates will be
-  # positive or negative based on the center point used, so we check the sign of center and
-  # adjust accordingly. This needs to change if we want option to force center spot.
-  if((boundLong[2]-boundLong[1])>180) {
-    if((boundLong[1]+boundLong[2]) < 0) {
-      buoyPositions$Longitude <- (buoyPositions$Longitude %% 360)
-    } else {
-      buoyPositions$Longitude <- (buoyPositions$Longitude %% 360) - 360
-    }
-    boundLong <- range(buoyPositions$Longitude)
-  }
+
   if(zoom=='auto') {
     map <- getMap(buoyPositions, force=FALSE)
   } else {

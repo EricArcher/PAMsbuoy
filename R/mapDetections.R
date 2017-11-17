@@ -28,14 +28,7 @@
 #'
 mapDetections <- function(detectionData, species='all', combine=TRUE, value='Count', map=NULL,
                           size=3, nrow=1, palette='Reds', nGroups=6) {
-  if(is.null(map)) {
-    detectionMap <- getMap(detectionData)
-  } else {
-    detectionMap <- map
-  }
-
   detectionData$PlotMe <- detectionData[[value]]
-
   detectionData <- if(all(species %in% 'all')) {
     detectionData
   } else if(all(species %in% unique(detectionData$Species))) {
@@ -54,25 +47,7 @@ mapDetections <- function(detectionData, species='all', combine=TRUE, value='Cou
       summarise(Longitude=median(Longitude), Latitude=median(Latitude),
                 Count=max(PlotMe)) %>% data.frame()
   }
-
-  # mapData <- if(all(bySpecies %in% 'none')) {
-  #   detectionData %>% group_by(Station) %>%
-  #     summarise(Latitude = median(Latitude), Longitude = median(Longitude),
-  #               Count = sum(PlotMe)) %>% data.frame() %>%
-  #     mutate(Species = 'All Species')
-  # } else if(all(bySpecies %in% 'all')) {
-  #   detectionData %>% group_by(Station, Species) %>%
-  #     summarise(Latitude = median(Latitude), Longitude = median(Longitude),
-  #               Count = sum(PlotMe)) %>% data.frame()
-  # } else if(all(bySpecies %in% unique(detectionData$Species))) {
-  #   detectionData %>% group_by(Station, Species) %>%
-  #     summarise(Latitude = median(Latitude), Longitude = median(Longitude),
-  #               Count = sum(PlotMe)) %>% data.frame() %>%
-  #     filter(Species %in% bySpecies)
-  # } else {
-  #   stop(paste('bySpecies argument', paste(bySpecies, collapse=' '), 'is not valid'))
-  # }
-
+  # Break into groups for coloring, then re-label groups for happiness.
   # sd <- round(sd(mapData$Count))
   # breaks <- seq(0, max(mapData$Count)+sd, sd)
   breaks <- seq(0, max(mapData$Count), length.out=nGroups+1)
@@ -88,11 +63,28 @@ mapDetections <- function(detectionData, species='all', combine=TRUE, value='Cou
   myPalette <- c('red', brewer.pal(nGroups, palette))
   usePalette <- myPalette[haveLevels]
 
-  detectionMap + geom_point(data=mapData, aes(x=Longitude, y=Latitude, color=Breaks, shape=Count==0), size=size) +
+  # Checking if we are crossing the dateline.
+  mapData <- fixDateline(mapData)
+
+  # Get map if needed
+  if(is.null(map)) {
+    detectionMap <- getMap(mapData)
+  } else {
+    detectionMap <- map
+  }
+
+  g <- detectionMap + geom_point(data=mapData, aes(x=Longitude, y=Latitude, color=Breaks, shape=Count==0), size=size) +
     facet_wrap(~Species, nrow=nrow) +
     scale_color_manual(values=usePalette, labels=haveLabels) +
     scale_shape_manual(values=c(16, 4), guide=FALSE) +
     labs(x='Longitude', y='Latitude', color='Detections') +
     guides(color=guide_legend(override.aes = list(shape=c(4, rep(16, length(haveLevels)-1))))) +
     theme(legend.key = element_rect(fill='#A3CCFF'))
+
+  # Re-doing labels in case we have crossed dateline, ie -190 -> +170
+  longLabsOld <- as.numeric(ggplot_build(g)$layout$panel_ranges[[1]]$x.labels)
+  longLabsNew <- sapply(longLabsOld, function(x) (x-180) %% 360 - 180)
+
+  suppressMessages(g <- g + scale_x_continuous(breaks=longLabsOld, labels=longLabsNew, expand=c(0,0)))
+  g
 }
