@@ -7,7 +7,7 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
-#' @importFrom dplyr mutate select arrange filter rename bind_rows bind_cols
+#' @importFrom dplyr mutate select arrange filter rename bind_rows bind_cols select_
 #' @importFrom magrittr %>%
 #' @importFrom purrr transpose
 #' @importFrom stringr str_trim
@@ -15,7 +15,7 @@
 #' @importFrom stringdist stringsim
 #' @export
 #'
-formatStation <- function(db) {
+formatStation <- function(db, ...) {
   position <- formatBuoyPosition(db)
   calibration <- formatBuoyCalibration(db, position)
   effort <- formatBuoyEffort(db)
@@ -42,7 +42,7 @@ formatStation <- function(db) {
   ))
 
   # a list of each detection
-  detections <- formatDetections(db, buoys)
+  detections <- formatDetections(db, buoys, ...)
   st <- list(buoys = buoys, detections = detections)
 
   attr(st, "station") <- attr(db, "station")
@@ -55,6 +55,7 @@ formatBuoyPosition <- function(db) {
   # a list of position data for each buoy
   db$HydrophoneStreamers %>%
     mutate(Buoy = as.character(StreamerIndex)) %>%
+    # filter(DifarModuleAction=='deployed') %>%
     select(Buoy, UTC, Latitude, Longitude) %>%
     arrange(Buoy, UTC) %>%
     split(., .$Buoy)
@@ -199,7 +200,12 @@ formatBuoyEffort <- function(db) {
 
 #' @rdname formatStation
 #'
-formatDetections <- function(db, buoys) {
+formatDetections <- function(db, buoys, extraCols = NULL) {
+  keepCols <- c('detection', 'Buoy', 'UTC', 'DIFARBearing', 'ClipLength',
+                'DifarFrequency', 'SignalAmplitude', 'DifarGain', 'Species')
+  if(!is.null(extraCols) & all(extraCols %in% colnames(db$DIFAR_Localisation))) {
+    keepCols <- c(keepCols, extraCols)
+  }
   detections <- db$DIFAR_Localisation %>%
     filter(Species != "vessel") %>%
     mutate(
@@ -207,10 +213,7 @@ formatDetections <- function(db, buoys) {
       MatchedAngles = gsub(" ", "", MatchedAngles)
     ) %>%
     mutate(detection = labelDetection(.)) %>%
-    select(
-      detection, Buoy, UTC, DIFARBearing, ClipLength, DifarFrequency,
-      SignalAmplitude, DifarGain, Species
-    ) %>%
+    select_(.dots = keepCols) %>%
     arrange(detection, Buoy, UTC)
 
   detectionEffortStatus <- function(b, dt, buoys) {
@@ -250,8 +253,7 @@ formatDetections <- function(db, buoys) {
     USE.NAMES = FALSE
   ) %>% bind_rows
 
-  bind_cols(detections, effort.status) # %>%
-    # split(., .$detection)
+  bind_cols(detections, effort.status)
 }
 
 #' @rdname formatStation
