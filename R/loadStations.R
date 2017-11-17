@@ -12,7 +12,7 @@
 #' @importFrom tools list_files_with_exts
 #' @export
 #'
-loadStations <- function(folder, db.ext = "sqlite3") {
+loadStations <- function(folder, db.ext = "sqlite3", ...) {
   if(missing(folder)) folder <- tcltk::tk_choose.dir()
   if(is.na(folder)) stop("No folder chosen")
 
@@ -21,14 +21,17 @@ loadStations <- function(folder, db.ext = "sqlite3") {
   sink(log, type = "message")
   fnames <- tools::list_files_with_exts(folder, exts = db.ext)
   fnames <- fnames[order(nchar(fnames), fnames)]
-  st.list <- sapply(fnames, function(f) {
-    message(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", f)
-    formatStation(loadDB(f, FALSE))
+  st.list <- sapply(seq_along(fnames), function(f) {
+    if((f %% 10)==1) {
+      cat('Loading station ', f, ' of ', length(fnames),'. \n')
+    }
+    message(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", fnames[f])
+    formatStation(loadDB(fnames[f], FALSE), ...)
   }, simplify = FALSE)
   sink(type = "message")
   file.show(log.fname)
 
-  names(st.list) <- basename(names(st.list))
+  names(st.list) <- basename(fnames)
   attr(st.list, "survey") <- folder
   st.list
 }

@@ -52,8 +52,6 @@ loadDB <- function(fname, verbose = FALSE) {
     }
   }
 
-
-
   db$Listening_Effort$Status <- tolower(str_trim(db$Listening_Effort$Status))
   db$DIFAR_Localisation$Species <- tolower(str_trim(db$DIFAR_Localisation$Species))
 
