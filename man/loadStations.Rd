@@ -4,7 +4,7 @@
 \alias{loadStations}
 \title{Load Multiple Stations}
 \usage{
-loadStations(folder, db.ext = "sqlite3")
+loadStations(folder, db.ext = "sqlite3", ...)
 }
 \arguments{
 \item{folder}{folder containing SQLite databases with DIFAR data. if missing

@@ -1,5 +1,6 @@
 # Testing zone.
-
+library(PAMsbuoy)
+library(dplyr)
 db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB_S102S103s.sqlite3')
 
 station <- formatStation(db)

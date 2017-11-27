@@ -4,17 +4,22 @@
 \alias{mapDetections}
 \title{Create a Map Showing Numbers of Detections}
 \usage{
-mapDetections(detectionData, bySpecies = "all", map = NULL, size = 3,
-  nrow = 2, palette = "Reds")
+mapDetections(detectionData, species = "all", combine = TRUE,
+  value = "Count", map = NULL, size = 3, nrow = 1, palette = "Reds",
+  nGroups = 6, grouping = "Station")
 }
 \arguments{
 \item{detectionData}{a dataframe with data on detections. Must have columns
 \code{Latitude}, \code{Longitude}, \code{Station}, and \code{Count}. Must
 also have column \code{Species} unless bySpecies is \code{'none'}}
 
-\item{bySpecies}{The different species to group the counts by. If \code{'none'},
-will group all detections together. If \code{'all'}, will show maps for all species.
-Can also accept a vector of individual species to be graphed.}
+\item{species}{The species to look at. Either a vector of specific species, or
+\code{'all'} to use all species.}
+
+\item{combine}{Should the counts for the selected species be combined. If
+\code{FALSE}, graph will be faceted for each species.}
+
+\item{value}{column name of values to plot}
 
 \item{map}{Optional, a ggmap object to plot on. If left as NULL, will be created by the
 getMap function. Can be included to reduce calls to getMap.}
@@ -24,6 +29,12 @@ getMap function. Can be included to reduce calls to getMap.}
 \item{nrow}{number of rows when plotting multiple species}
 
 \item{palette}{color palette to be used, see brewer.pal for more info}
+
+\item{nGroups}{the number of different groups to use for coloring. Groups will be
+evenly spaced between 0 and max number of detections.}
+
+\item{grouping}{The level to group count data by. Default is Station, can be set
+to \code{c('Station', 'Buoy')} to group at buoy level.}
 }
 \description{
 Return a ggmap object showing the number of detections at each sonobuoy

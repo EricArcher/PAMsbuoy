@@ -9,7 +9,7 @@
 \alias{convertBinaryChannel}
 \title{Format Station Data}
 \usage{
-formatStation(db)
+formatStation(db, ...)
 
 formatBuoyPosition(db)
 
@@ -17,7 +17,7 @@ formatBuoyCalibration(db, position)
 
 formatBuoyEffort(db)
 
-formatDetections(db, buoys)
+formatDetections(db, buoys, extraCols = NULL)
 
 convertBinaryChannel(x)
 }

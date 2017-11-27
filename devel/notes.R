@@ -22,8 +22,6 @@
 # Probably want warnings about multiple deployment position records for buoys. Station 2 and 3 have a bunch of weird
 # shit (lasker) in the streamers table. Looks like stuff got split between two dbs over the days.
 
-# Progress updates on loadStations - calcurceas taking a long time, would be good to know how far along we are.
-
 # Species summary provides detection for each buoy, but isnt trying to match them up to say 'these two calls on
 # these buoys are the same call' using MatchedAngles or whatever Eric has it called.
 

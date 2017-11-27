@@ -18,6 +18,8 @@
 #' @param palette color palette to be used, see brewer.pal for more info
 #' @param nGroups the number of different groups to use for coloring. Groups will be
 #'    evenly spaced between 0 and max number of detections.
+#' @param grouping The level to group count data by. Default is Station, can be set
+#'    to \code{c('Station', 'Buoy')} to group at buoy level.
 #'
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
@@ -27,7 +29,7 @@
 #' @export
 #'
 mapDetections <- function(detectionData, species='all', combine=TRUE, value='Count', map=NULL,
-                          size=3, nrow=1, palette='Reds', nGroups=6) {
+                          size=3, nrow=1, palette='Reds', nGroups=6, grouping='Station') {
   detectionData$PlotMe <- detectionData[[value]]
   detectionData <- if(all(species %in% 'all')) {
     detectionData
@@ -38,12 +40,12 @@ mapDetections <- function(detectionData, species='all', combine=TRUE, value='Cou
   }
 
   mapData <- if(combine) {
-    detectionData %>% group_by(Station) %>%
+    detectionData %>% group_by_(.dots=grouping) %>%
       summarise(Longitude=median(Longitude), Latitude=median(Latitude),
                 Count=sum(PlotMe)) %>% data.frame() %>%
       mutate(Species = paste(species, collapse=' '))
   } else {
-    detectionData %>% group_by(Station, Species) %>%
+    detectionData %>% group_by_(.dots=c(grouping, 'Species')) %>%
       summarise(Longitude=median(Longitude), Latitude=median(Latitude),
                 Count=max(PlotMe)) %>% data.frame()
   }
@@ -76,9 +78,10 @@ mapDetections <- function(detectionData, species='all', combine=TRUE, value='Cou
   g <- detectionMap + geom_point(data=mapData, aes(x=Longitude, y=Latitude, color=Breaks, shape=Count==0), size=size) +
     facet_wrap(~Species, nrow=nrow) +
     scale_color_manual(values=usePalette, labels=haveLabels) +
-    scale_shape_manual(values=c(16, 4), guide=FALSE) +
+    scale_shape_manual(values=c('FALSE'=16, 'TRUE'=4), guide=FALSE) +
     labs(x='Longitude', y='Latitude', color='Detections') +
-    guides(color=guide_legend(override.aes = list(shape=c(4, rep(16, length(haveLevels)-1))))) +
+    guides(color=guide_legend(override.aes = list(shape=ifelse(haveLabels=='0', 4, 16)))) +
+    # guides(color=guide_legend(override.aes = list(shape=c(4, rep(16, length(haveLevels)-1))))) +
     theme(legend.key = element_rect(fill='#A3CCFF'))
 
   # Re-doing labels in case we have crossed dateline, ie -190 -> +170
