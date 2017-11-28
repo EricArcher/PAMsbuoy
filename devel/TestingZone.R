@@ -2,7 +2,8 @@
 library(PAMsbuoy)
 library(dplyr)
 db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB_S102S103s.sqlite3')
-
+db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment DIFAR - Circles.sqlite3')
+db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
 station <- formatStation(db)
 
 # Calcurceas
@@ -24,3 +25,7 @@ map <- getMap(calSum)
 mapDetections(calSum, map=map, palette = 'YlOrRd', combine=F, nGroups = 9, species=c('bma', 'bmb'))
 
 mapStations(setteStations)
+
+# Drift
+dtest <- driftCalibration(station$buoys)
+lapply(dtest, function(x) sqrt(diag(solve(-x$hessian))))

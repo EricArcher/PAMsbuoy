@@ -11,31 +11,32 @@
 #'
 #' @export
 #'
-driftCalibration <- function(buoy.data, graph=FALSE, initial = c(1, 0)) {
+driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0)) {
   lapply(buoy.data, function(buoy) {
     start <- buoy$position[1,]
     if(!graph) {
-      drift <- optim(par=initial, negLogl, boat=buoy$calibration, start=start, hessian=TRUE,
-                     method='L-BFGS-B', lower=c(-3, -360), upper=c(3, 360))
+      drift <- optim(par=initial, driftLogl, boat=buoy$calibration, start=start,
+                     control=list('fnscale'=-1), hessian=TRUE, method='L-BFGS-B', lower=c(0, 0), upper=c(3, 360))
     }
     list(rate=drift$par[1], bearing=drift$par[2], hessian=drift$hessian)
   })
 }
 
-negLogl <- function(boat, start, drift) {
+driftLogl <- function(boat, start, drift) {
   expected <- expectedBearing(boat, start, drift[1], drift[2])
+  sd <- 4
   error <- sapply((boat$DIFARBearing - expected) %% 360, function(x) {
     if(x < abs(x-360)) {x}
     else {x-360}
   }
   )
-  (nrow(boat)/2)*log(2*pi*(4^2)) + (1/2/(4^2))*sum((error)^2)
+  -1*(nrow(boat)/2)*log(2*pi*(sd^2)) - (1/2/(sd^2))*sum((error)^2)
 }
 
 expectedBearing <- function(boat, start, drift.rate, drift.phi) {
   drift.distance <- drift.rate*difftime(boat$UTC, start$UTC, units='secs')/3600 # using seconds
   buoyLoc <- matrix(
-    destination(start$Latitude, start$Longitude, brng=drift.phi, distance=drift.distance, units='km'),
+    swfscMisc::destination(start$Latitude, start$Longitude, brng=drift.phi, distance=drift.distance, units='km'),
     ncol=2)
   swfscMisc::bearing(buoyLoc[,1], buoyLoc[,2], boat$BoatLatitude, boat$BoatLongitude)
 }
