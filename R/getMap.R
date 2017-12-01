@@ -9,12 +9,15 @@
 #'    get_map function of ggmap
 #' @param force flag whether or not to force a specific zoom level instead of
 #'   finding it automatically
+#' @param center the location to center the map on. If \code{NULL}, will use the
+#'   mean of the range of the data. If not \code{NULL} it must be a named vector
+#'   with values \code{lon} and \code{lat}
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
 #' @importFrom ggmap get_map ggmap
 #' @export
 #'
-getMap <- function(positions, force=FALSE, zoom=10) {
+getMap <- function(positions, force=FALSE, zoom=10, center=NULL) {
   # We cant automatically map near the poles yet, just stop for now.
   poleThresh <- 70
   if(max(abs(positions$Latitude)) > poleThresh) {
@@ -28,7 +31,20 @@ getMap <- function(positions, force=FALSE, zoom=10) {
   positions <- fixDateline(positions)
   boundLong <- range(positions$Longitude)
   boundLat <- range(positions$Latitude)
-  suppressMessages(map <- get_map(location = c(lon=mean(boundLong), lat=mean(boundLat)), zoom=zoom))
+  if(is.null(center)) {
+    center <- c(lon=mean(boundLong), lat=mean(boundLat))
+  }
+  # Try downloading up to three times - fails quite often, but will work on second try
+  nTries <- 3
+  map <- NULL
+  suppressMessages(
+    for(t in 1:nTries) {
+      try(
+        map <- get_map(location = center, zoom=zoom)
+      )
+      if(!is.null(map)) break
+    }
+  )
 
   # Checking if all points are within map range. If not, zoom out 1.
   mapRange <- attr(map, 'bb')
