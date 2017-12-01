@@ -25,6 +25,7 @@ map <- getMap(calSum)
 mapDetections(calSum, map=map, palette = 'YlOrRd', combine=F, nGroups = 9, species=c('bma', 'bmb'))
 
 mapStations(setteStations)
+mapDetections(detectionSummary(setteStations[-2:-1]))
 
 # Drift
 dtest <- driftCalibration(station$buoys)

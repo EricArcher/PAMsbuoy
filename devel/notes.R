@@ -30,3 +30,6 @@
 # sure how we would decide the bin sizes. Have it going this way now.
 
 # Species maps - Need to deal with buoys. Should we show all factor levels when they arent present (the legend)
+
+# Individual station maps - Need to be able to plot many detections at same time (arrows)? Coloring and legend
+# gets a little stupid. Better to be in a manipulate where you just pick one?
