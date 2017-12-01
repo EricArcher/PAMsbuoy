@@ -29,3 +29,13 @@ mapStations(setteStations)
 # Drift
 dtest <- driftCalibration(station$buoys)
 lapply(dtest, function(x) sqrt(diag(solve(-x$hessian))))
+
+# Bearing drawing
+source('./devel/drawBearing.R')
+library(manipulate)
+myStation <- laskerStations$`1705_pg11511_sb_31_20171026.sqlite3`
+myStation <- calStations$`1647_SB_S4S5s.sqlite3`
+dets <- myStation$detections
+buoys <- myStation$buoys
+dets <- cbind(dets, buoyPosition(dets, transpose(buoys)$position))
+drawBearings(dets)
