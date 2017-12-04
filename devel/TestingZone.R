@@ -31,6 +31,17 @@ mapDetections(detectionSummary(setteStations[-2:-1]))
 # Drift
 dtest <- driftCalibration(station$buoys)
 lapply(dtest, function(x) sqrt(diag(solve(-x$hessian))))
+boat <- calStations$`1647_SB_S4S5s.sqlite3`$buoys$`0`$calibration
+start <- calStations$`1647_SB_S4S5s.sqlite3`$buoys$`0`$position[1,]
+rates <- seq(0,3, length.out=30)
+angles <- seq(0,360, length.out=120)
+grid <- sapply(rates, function(r) {sapply(angles, function(t) {driftLogl(boat, start, c(r, t))})})
+driftData <- data.frame(rate=unlist(lapply(rates, function(r) rep(r, length(angles)))), angle=rep(angles, length(rates)))
+for(i in 1:nrow(driftData)) {
+  driftData$logl[i] <- driftLogl(boat, start, c(driftData$rate[i], driftData$angle[i]))
+}
+plot_ly(x=driftData$rate, y=driftData$angle, color=driftData$logl) %>% add_surface()
+plot_ly(z=grid) %>% add_surface()
 
 # Bearing drawing
 source('./devel/drawBearing.R')
