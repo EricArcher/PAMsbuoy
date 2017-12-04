@@ -53,12 +53,25 @@ formatStation <- function(db, ...) {
 #'
 formatBuoyPosition <- function(db) {
   # a list of position data for each buoy
-  db$HydrophoneStreamers %>%
-    mutate(Buoy = as.character(StreamerIndex)) %>%
-    # filter(DifarModuleAction=='deployed') %>%
-    select(Buoy, UTC, Latitude, Longitude) %>%
-    arrange(Buoy, UTC) %>%
-    split(., .$Buoy)
+  # db$HydrophoneStreamers %>%
+  #   mutate(Buoy = as.character(StreamerIndex)) %>%
+  #   # filter(DifarModuleAction=='deployed') %>%
+  #   select(Buoy, UTC, Latitude, Longitude) %>%
+  #   arrange(Buoy, UTC) %>%
+  #   split(., .$Buoy)
+
+  # Force to use new version where this column exists?
+  df <- db$HydrophoneStreamers
+  if('DifarModuleAction' %in% colnames(df)) {
+    df %>%
+      mutate(Buoy = as.character(StreamerIndex),
+             DifarModuleAction = str_trim(DifarModuleAction)) %>%
+      filter(DifarModuleAction == 'deployed') %>%
+      select(Buoy, UTC, Latitude, Longitude) %>%
+      arrange(Buoy, UTC) %>%
+      split(., .$Buoy)
+  }
+
 }
 
 #' @rdname formatStation

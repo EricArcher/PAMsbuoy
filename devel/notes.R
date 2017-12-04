@@ -63,6 +63,7 @@
 # switch to base plot, then have option to make pretty version. Probably want to still load the map so we can
 # get same bounding box? or maybe a better way. Want same frame for each one, actually prob just bound on the
 # extremes of localization or whatever we have.
+
 #### ORDER OF WORK ####
 # 1) Buoy calibration. 2) Buoy drift. 3) Error checking? 4) Format output for models
 # 5) sound source estimation? 6) localization?
