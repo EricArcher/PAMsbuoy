@@ -15,15 +15,27 @@
 #' @importFrom stringdist stringsim
 #' @export
 #'
-formatStation <- function(db, ...) {
-  position <- formatBuoyPosition(db)
+formatStation <- function(db, buoyPositions = NULL, ...) {
+  # Make new position list favoring file positions.
+  # Need to adjust calculateOffset part to check for missing positions
+  # or stop first
+  dbPosition <- formatBuoyPosition(db)
+  buoyPositions <- if(!is.null(buoyPositions)) {
+    neededCols <- c('Buoy', 'UTC', 'Latitude', 'Longitude')
+    if(!all(neededCols %in% colnames(buoyPositions))) {
+      stop('Provided buoyPositions file must have columns ', paste(neededCols, collapse=', '))
+    }
+    split(buoyPositions, buoyPositions$Buoy)
+  }
   calibration <- formatBuoyCalibration(db, position)
   effort <- formatBuoyEffort(db)
 
   buoyList <- unique(c(names(position), names(calibration), names(effort)))
 
   missing.positions <- setdiff(buoyList, names(position))
-  if(length(missing.positions) > 0)
+  if(length(missing.positions) > 0) {
+
+  }
 
   missing.calibration <- setdiff(buoyList, names(calibration))
   if(length(missing.calibration) > 0) {
@@ -39,6 +51,7 @@ formatStation <- function(db, ...) {
     message("  no effort records for buoys ", paste(missing.effort, collapse = ", "))
   }
 
+  calibration <- calculateOffset(calibration, position, db)
   # transpose to list of position, calibration, and effort for each buoy
   buoys <- purrr::transpose(list(
     position = position,
@@ -88,15 +101,15 @@ formatBuoyCalibration <- function(db, position) {
     mutate(Buoy = as.character(Channel)) %>%
     select(Buoy, UTC, DIFARBearing) %>%
     arrange(Buoy, UTC) %>%
-    split(., .$Buoy) %>%
-    calculateOffset(position, db)
+    split(., .$Buoy) # %>%
+    # calculateOffset(position, db)
 }
 
 #' @rdname formatStation
 #'
 formatBuoyEffort <- function(db) {
   buoys <- sort(unique(db$DIFAR_Localisation$Channel))
-  buoys <- sort(unique(db$HydrophoneStreamers$StreamerIndex))
+  buoys <- union(buoys, sort(unique(db$HydrophoneStreamers$StreamerIndex)))
 
   # identify noise Notes
   db$Spectrogram_Annotation <- db$Spectrogram_Annotation %>%
@@ -197,14 +210,23 @@ formatBuoyEffort <- function(db) {
       }
       b.eff <- b.eff[1:max(offs),]
     }
-    browser()
+
     # Want a clean way of doing this if nrow=1. Doesnt work with vector result, just giving false[1]
+    if(nrow(b.eff)==1) {
+      b.eff <- b.eff %>% mutate(
+        effort.id = 1,
+        Status = gsub(' ', '.', Status)
+    )} else {
+      b.eff <- b.eff %>% mutate(
+        effort.id = rep(1:(n()/2), each=2),
+        Status = gsub(' ', '.', Status)
+    )}
 
     b.eff %>%
-      mutate(
-        effort.id = ifelse(nrow(b.eff)==1, 1, rep(1:(n() / 2), each = 2)),
-        Status = gsub(" ", ".", Status)
-      ) %>%
+      # mutate(
+      #   effort.id = ifelse(nrow(b.eff)==1, 1, rep(1:(n() / 2), each = 2)),
+      #   Status = gsub(" ", ".", Status)
+      # ) %>%
       spread(Status, UTC) %>%
       rename(on = on.effort, off = off.effort) %>%
       mutate(duration = difftime(off, on, units = "secs")) %>%

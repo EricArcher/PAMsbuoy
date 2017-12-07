@@ -5,6 +5,7 @@ db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB
 db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment DIFAR - Circles.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
 db <- loadDB('../SonoBuoy/Data/HICEAS_2017/Sette/Database/1706_pg11511_sb_10_20170722.sqlite3')
+db <- loadDB('./devel/final db formatting/FinalFormat_Station1.sqlite3')
 station <- formatStation(db)
 
 # Calcurceas
@@ -52,3 +53,4 @@ dets <- myStation$detections
 buoys <- myStation$buoys
 dets <- cbind(dets, buoyPosition(dets, transpose(buoys)$position))
 drawBearings(dets, map=F)
+
