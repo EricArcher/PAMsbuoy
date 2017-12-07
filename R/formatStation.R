@@ -20,18 +20,23 @@ formatStation <- function(db, ...) {
   calibration <- formatBuoyCalibration(db, position)
   effort <- formatBuoyEffort(db)
 
-  missing.buoys <- setdiff(names(position), names(calibration))
-  if(length(missing.buoys) > 0) {
-    for(b in missing.buoys) calibration[b] <- list(NULL)
+  buoyList <- unique(c(names(position), names(calibration), names(effort)))
+
+  missing.positions <- setdiff(buoyList, names(position))
+  if(length(missing.positions) > 0)
+
+  missing.calibration <- setdiff(buoyList, names(calibration))
+  if(length(missing.calibration) > 0) {
+    for(b in missing.calibration) calibration[b] <- list(NULL)
     calibration <- calibration[order(names(calibration))]
-    message("  no calibration records for buoys ", paste(missing.buoys, collapse = ", "))
+    message("  no calibration records for buoys ", paste(missing.calibration, collapse = ", "))
   }
 
-  missing.buoys <- setdiff(names(position), names(effort))
-  if(length(missing.buoys) > 0) {
-    for(b in missing.buoys) effort[b] <- list(NULL)
+  missing.effort <- setdiff(buoyList, names(effort))
+  if(length(missing.effort) > 0) {
+    for(b in missing.effort) effort[b] <- list(NULL)
     effort <- effort[order(names(effort))]
-    message("  no effort records for buoys ", paste(missing.buoys, collapse = ", "))
+    message("  no effort records for buoys ", paste(missing.effort, collapse = ", "))
   }
 
   # transpose to list of position, calibration, and effort for each buoy
