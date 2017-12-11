@@ -4,7 +4,7 @@
 \alias{getMap}
 \title{Get a Map of Appropriate Size}
 \usage{
-getMap(positions, force = FALSE, zoom = 10)
+getMap(positions, force = FALSE, zoom = 10, center = NULL)
 }
 \arguments{
 \item{positions}{data frame containing columns \code{Latitude} and \code{Longitude}}
@@ -14,6 +14,10 @@ finding it automatically}
 
 \item{zoom}{zoom level used for the map. An integer, see zoom description in
 get_map function of ggmap}
+
+\item{center}{the location to center the map on. If \code{NULL}, will use the
+mean of the range of the data. If not \code{NULL} it must be a named vector
+with values \code{lon} and \code{lat}}
 }
 \description{
 Return a ggmap object centered on the middle of the positions
