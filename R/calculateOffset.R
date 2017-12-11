@@ -16,6 +16,9 @@ calculateOffset <- function(calibration, position, db) {
   for(b in names(calibration)) {
     b.cal <- calibration[[b]]
     # get buoy position
+    if(is.null(b.cal)) {
+      next
+    }
     buoy.pos <- buoyPosition(b.cal, position, method='initial')
     # get ship position at calibration point times
     ship.pos <- estimatePosition(b.cal$UTC, db$gpsData)

@@ -38,6 +38,6 @@ Format data for a station from an list of tables read from
   a PAMGuard SQLlite database.
 }
 \author{
-Eric Archer \email{eric.archer@noaa.gov}
+Eric Archer \email{eric.archer@noaa.gov}, Taiki Sakai \email{taiki.sakai@noaa.gov}
 }
 \keyword{internal}

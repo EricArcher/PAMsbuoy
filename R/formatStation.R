@@ -43,21 +43,24 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
   effort <- formatBuoyEffort(db)
 
   buoyList <- unique(c(names(position), names(calibration), names(effort)))
+  # if(length(buoyList) == 0) {
+  #   stop(
   error <- list()
   for(b in buoyList) {
     error[b] <- FALSE
   }
+  names(error) <- buoyList
 
   missing.positions <- setdiff(buoyList, names(position))
   if(length(missing.positions) > 0) {
     if(!overrideError) {
-      stop('Missing deployment position information for buoys ',
+      stop('  CRITICAL: Missing deployment position information for buoy(s) ',
            paste(missing.positions, collapse = ', '), '. \n',
-           'You must fix in the database or provide as a separate file.')
+           '   You must fix in the database or provide as a separate file.')
     } else {
-      message('Missing deployment position information for buoys ',
+      message('  CRITICAL: Missing deployment position information for buoy(s) ',
               paste(missing.positions, collapse = ', '), '. \n',
-              'You must fix in the database or provide as a separate file.')
+              '   You must fix in the database or provide as a separate file.')
       for(b in missing.positions) {
         position[b] <- list(NULL)
         error[b] <- TRUE
@@ -73,7 +76,7 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
       calibration[b] <- list(NULL)
     }
     calibration <- calibration[order(names(calibration))]
-    message("  no calibration records for buoys ", paste(missing.calibration, collapse = ", "))
+    message("  no calibration records for buoy(s) ", paste(missing.calibration, collapse = ", "))
   }
 
   missing.effort <- setdiff(buoyList, names(effort))
@@ -82,7 +85,7 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
       effort[b] <- list(NULL)
     }
     effort <- effort[order(names(effort))]
-    message("  no effort records for buoys ", paste(missing.effort, collapse = ", "))
+    message("  no effort records for buoy(s) ", paste(missing.effort, collapse = ", "))
   }
 
   calibration <- calculateOffset(calibration, position, db)
@@ -98,6 +101,24 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
 
   # a list of each detection
   detections <- formatDetections(db, buoys, ...)
+  missing.detections <- setdiff(unique(detections$Buoy), buoyList)
+  if(length(missing.detections) > 0) {
+    if(!overrideError) {
+      stop('  CRITICAL: Detections are present for buoy(s)',
+           paste(missing.detections, collapse = ', '),
+           ', but there is no deployment, effort, or calibration data. \n',
+           '   You must fix in the database or provide deployment position in a separate file.')
+    } else {
+      for(b in missing.detections) {
+        buoys[[b]] <- list(error=TRUE)
+      }
+      buoys <- buoys[order(names(buoys))]
+      message('  CRITICAL: Detections are present for buoy(s)',
+              paste(missing.detections, collapse = ', '),
+              ', but there is no deployment, effort, or calibration data. \n',
+              '   You must fix in the database or provide deployment position in a separate file.')
+    }
+  }
   st <- list(buoys = buoys, detections = detections)
 
   attr(st, "station") <- attr(db, "station")
@@ -243,7 +264,7 @@ formatBuoyEffort <- function(db) {
       message('  no "off effort" records for buoy ', b)
     } else {
       if(max(offs) != nrow(b.eff)) {
-        message(' last effort record for buoy ', b, ' is not "off effort"')
+        message('  last effort record for buoy ', b, ' is not "off effort"')
       }
       b.eff <- b.eff[1:max(offs),]
     }

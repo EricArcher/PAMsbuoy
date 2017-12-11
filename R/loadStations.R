@@ -21,16 +21,26 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
   sink(log, type = "message")
   fnames <- tools::list_files_with_exts(folder, exts = db.ext)
   fnames <- fnames[order(nchar(fnames), fnames)]
+  error <- FALSE
   st.list <- sapply(seq_along(fnames), function(f) {
     if((f %% 10)==1) {
       cat('Loading station ', f, ' of ', length(fnames),'. \n')
     }
     message(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", fnames[f])
-    formatStation(loadDB(fnames[f], FALSE), overrideError = TRUE, ...)
+    station <- formatStation(loadDB(fnames[f], FALSE), overrideError = TRUE, ...)
+    for(b in seq_along(station$buoys)) {
+      if(station$buoys[[b]]$error) {
+        error <<- TRUE
+      }
+      station$buoys[[b]] <- station$buoys[[b]][!(names(station$buoys[[b]]) == 'error')]
+    }
+    station
   }, simplify = FALSE)
   sink(type = "message")
   file.show(log.fname)
-
+  if(error) {
+    message('WARNING: Encountered problems while loading stations. See error log and fix CRITICAL errors.')
+  }
   names(st.list) <- basename(fnames)
   attr(st.list, "survey") <- folder
   st.list
