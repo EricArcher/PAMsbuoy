@@ -26,7 +26,7 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
       cat('Loading station ', f, ' of ', length(fnames),'. \n')
     }
     message(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", fnames[f])
-    formatStation(loadDB(fnames[f], FALSE), ...)
+    formatStation(loadDB(fnames[f], FALSE), overrideError = TRUE, ...)
   }, simplify = FALSE)
   sink(type = "message")
   file.show(log.fname)

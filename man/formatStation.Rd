@@ -9,7 +9,7 @@
 \alias{convertBinaryChannel}
 \title{Format Station Data}
 \usage{
-formatStation(db, ...)
+formatStation(db, buoyPositions = NULL, overrideError = FALSE, ...)
 
 formatBuoyPosition(db)
 
@@ -23,6 +23,15 @@ convertBinaryChannel(x)
 }
 \arguments{
 \item{db}{list of data frames from PAMGuard SQLlite database}
+
+\item{buoyPositions}{optional argument, a data frame containing position
+information for buoy deployments. Data frame must have columns \code{Buoy},
+\code{UTC}, \code{Latitude}, and \code{Longitude}. If buoy positions are present
+both in the database and this dataframe, positions from this data frame will be used.}
+
+\item{overrideError}{station formatting will stop if insufficient buoy position data is
+present. Set this to \code{TRUE} to override this behaviour and continue loading
+the station and mark problematic buoys with \code{error=TRUE}.}
 }
 \description{
 Format data for a station from an list of tables read from

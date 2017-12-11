@@ -6,7 +6,9 @@ db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment 
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
 db <- loadDB('../SonoBuoy/Data/HICEAS_2017/Sette/Database/1706_pg11511_sb_10_20170722.sqlite3')
 db <- loadDB('./devel/final db formatting/FinalFormat_Station1.sqlite3')
-station <- formatStation(db)
+buoyPos <- data.frame(Buoy = '1', UTC='2014-08-08 03:19:27',
+                      Latitude = 34.6, Longitude = -125)
+station <- formatStation(db, override = T, buoyPositions = buoyPos)
 
 # Calcurceas
 calStations <- loadStations('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/', extraCols='TrackedGroup')
