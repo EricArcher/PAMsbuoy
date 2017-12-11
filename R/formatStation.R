@@ -4,8 +4,15 @@
 #'   a PAMGuard SQLlite database.
 #'
 #' @param db list of data frames from PAMGuard SQLlite database
+#' @param buoyPositions optional argument, a data frame containing position
+#'   information for buoy deployments. Data frame must have columns \code{Buoy},
+#'   \code{UTC}, \code{Latitude}, and \code{Longitude}. If buoy positions are present
+#'   both in the database and this dataframe, positions from this data frame will be used.
+#' @param overrideError station formatting will stop if insufficient buoy position data is
+#'   present. Set this to \code{TRUE} to override this behaviour and continue loading
+#'   the station and mark problematic buoys with \code{error=TRUE}.
 #'
-#' @author Eric Archer \email{eric.archer@@noaa.gov}
+#' @author Eric Archer \email{eric.archer@@noaa.gov}, Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
 #' @importFrom dplyr mutate select arrange filter rename bind_rows bind_cols select_
 #' @importFrom magrittr %>%
@@ -15,49 +22,79 @@
 #' @importFrom stringdist stringsim
 #' @export
 #'
-formatStation <- function(db, buoyPositions = NULL, ...) {
+formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
   # Make new position list favoring file positions.
   # Need to adjust calculateOffset part to check for missing positions
   # or stop first
-  dbPosition <- formatBuoyPosition(db)
+  dbPositions <- formatBuoyPosition(db)
   buoyPositions <- if(!is.null(buoyPositions)) {
     neededCols <- c('Buoy', 'UTC', 'Latitude', 'Longitude')
     if(!all(neededCols %in% colnames(buoyPositions))) {
       stop('Provided buoyPositions file must have columns ', paste(neededCols, collapse=', '))
     }
+    buoyPositions$UTC <- as.POSIXct(buoyPositions$UTC, tz='GMT')
     split(buoyPositions, buoyPositions$Buoy)
+  }
+  position <- dbPositions
+  for(b in names(buoyPositions)) {
+    position[[b]] <- buoyPositions[[b]]
   }
   calibration <- formatBuoyCalibration(db, position)
   effort <- formatBuoyEffort(db)
 
   buoyList <- unique(c(names(position), names(calibration), names(effort)))
+  error <- list()
+  for(b in buoyList) {
+    error[b] <- FALSE
+  }
 
   missing.positions <- setdiff(buoyList, names(position))
   if(length(missing.positions) > 0) {
-
+    if(!overrideError) {
+      stop('Missing deployment position information for buoys ',
+           paste(missing.positions, collapse = ', '), '. \n',
+           'You must fix in the database or provide as a separate file.')
+    } else {
+      message('Missing deployment position information for buoys ',
+              paste(missing.positions, collapse = ', '), '. \n',
+              'You must fix in the database or provide as a separate file.')
+      for(b in missing.positions) {
+        position[b] <- list(NULL)
+        error[b] <- TRUE
+      }
+    }
   }
+  position <- position[order(names(position))]
+  error <- error[order(names(error))]
 
   missing.calibration <- setdiff(buoyList, names(calibration))
   if(length(missing.calibration) > 0) {
-    for(b in missing.calibration) calibration[b] <- list(NULL)
+    for(b in missing.calibration) {
+      calibration[b] <- list(NULL)
+    }
     calibration <- calibration[order(names(calibration))]
     message("  no calibration records for buoys ", paste(missing.calibration, collapse = ", "))
   }
 
   missing.effort <- setdiff(buoyList, names(effort))
   if(length(missing.effort) > 0) {
-    for(b in missing.effort) effort[b] <- list(NULL)
+    for(b in missing.effort) {
+      effort[b] <- list(NULL)
+    }
     effort <- effort[order(names(effort))]
     message("  no effort records for buoys ", paste(missing.effort, collapse = ", "))
   }
 
   calibration <- calculateOffset(calibration, position, db)
   # transpose to list of position, calibration, and effort for each buoy
-  buoys <- purrr::transpose(list(
+  buoyTemp <- list(
     position = position,
     calibration = calibration,
-    effort = effort
-  ))
+    effort = effort)
+  if(overrideError) {
+    buoyTemp$error <- error
+  }
+  buoys <- purrr::transpose(buoyTemp)
 
   # a list of each detection
   detections <- formatDetections(db, buoys, ...)
