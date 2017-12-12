@@ -9,7 +9,8 @@
 \alias{convertBinaryChannel}
 \title{Format Station Data}
 \usage{
-formatStation(db, buoyPositions = NULL, overrideError = FALSE, ...)
+formatStation(db, buoyPositions = NULL, overrideError = FALSE,
+  dateFormat = "\%Y-\%m-\%d \%H:\%M:\%S", ...)
 
 formatBuoyPosition(db)
 
@@ -24,14 +25,18 @@ convertBinaryChannel(x)
 \arguments{
 \item{db}{list of data frames from PAMGuard SQLlite database}
 
-\item{buoyPositions}{optional argument, a data frame containing position
-information for buoy deployments. Data frame must have columns \code{Buoy},
+\item{buoyPositions}{optional argument, can be a data frame containing position
+information for buoy deployments or a file path. Data frame must have columns \code{Buoy},
 \code{UTC}, \code{Latitude}, and \code{Longitude}. If buoy positions are present
-both in the database and this dataframe, positions from this data frame will be used.}
+both in the database and this dataframe, positions from this data frame will be used.
+File path must be to a csv file to be read in as a data frame.}
 
 \item{overrideError}{station formatting will stop if insufficient buoy position data is
 present. Set this to \code{TRUE} to override this behaviour and continue loading
 the station and mark problematic buoys with \code{error=TRUE}.}
+
+\item{dateFormat}{character string giving date-time format as used by strptime. This
+is used to format the dates of data supplied by buoyPositions.}
 }
 \description{
 Format data for a station from an list of tables read from

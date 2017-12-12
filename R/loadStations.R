@@ -3,6 +3,7 @@
 #'
 #' @param folder folder containing SQLite databases with DIFAR data. if missing
 #'   a dialog box will be presented to choose a folder
+#' @param db.ext database extension to look for in chosen folder
 #'
 #' @return a list of sonobuoy stations
 #'
@@ -23,7 +24,7 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
   fnames <- fnames[order(nchar(fnames), fnames)]
   error <- FALSE
   st.list <- sapply(seq_along(fnames), function(f) {
-    if((f %% 10)==1) {
+    if((f %% 10)==1 | f == length(fnames)) {
       cat('Loading station ', f, ' of ', length(fnames),'. \n')
     }
     message(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", fnames[f])
@@ -39,7 +40,14 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
   sink(type = "message")
   file.show(log.fname)
   if(error) {
-    message('WARNING: Encountered problems while loading stations. See error log and fix CRITICAL errors.')
+    message('WARNING: Encountered problems while loading stations. See error log and fix CRITICAL errors.',
+            '\n You may need to upload a file of buoy deployment positions. Select a file now, \n',
+            ' or cancel and re-run with argument buoyPositions set to missing deployment data. \n',
+            ' Please ensure that the dateFormat argument matches your data (default %Y-%m-%d %H:%M:%S, see strptime for options).')
+    try({
+      buoyPositions <- file.choose()
+      return(loadStations(folder=folder, db.ext=db.ext, buoyPositions = buoyPositions, ...))
+    })
   }
   names(st.list) <- basename(fnames)
   attr(st.list, "survey") <- folder

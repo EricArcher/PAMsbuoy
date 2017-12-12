@@ -5,10 +5,10 @@ db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB
 db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment DIFAR - Circles.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
 db <- loadDB('../SonoBuoy/Data/HICEAS_2017/Sette/Database/1706_pg11511_sb_10_20170722.sqlite3')
-db <- loadDB('./devel/final db formatting/FinalFormat_Station1.sqlite3')
+db <- loadDB('./devel/final db formatting/FinalFormat_Station2.sqlite3')
 buoyPos <- data.frame(Buoy = '1', UTC='2014-08-08 03:19:27',
                       Latitude = 34.6, Longitude = -125)
-station <- formatStation(db, override = T)
+station <- formatStation(db, override = F, dateFormat = '%m/%d/%Y %H:%M')
 
 # Calcurceas
 calStations <- loadStations('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/', extraCols='TrackedGroup')
@@ -17,7 +17,7 @@ setteStations <- loadStations('../SonoBuoy/Data/HICEAS_2017/Sette/Database/')
 # Lasker
 laskerStations <- loadStations('../SonoBuoy/Data/HICEAS_2017/Lasker/Database/')
 # Test
-testStations <- loadStations('./devel/final db formatting/')
+testStations <- loadStations('./devel/final db formatting/', dateFormat = '%m/%d/%Y %H:%M', buoyPositions = file.choose())
 
 # All the P1 P2 shit is messed up. Gotta combine all janky like
 calSum <- detectionSummary(calStations) %>%

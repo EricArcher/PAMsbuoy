@@ -4,13 +4,16 @@
 #'   a PAMGuard SQLlite database.
 #'
 #' @param db list of data frames from PAMGuard SQLlite database
-#' @param buoyPositions optional argument, a data frame containing position
-#'   information for buoy deployments. Data frame must have columns \code{Buoy},
+#' @param buoyPositions optional argument, can be a data frame containing position
+#'   information for buoy deployments or a file path. Data frame must have columns \code{Buoy},
 #'   \code{UTC}, \code{Latitude}, and \code{Longitude}. If buoy positions are present
 #'   both in the database and this dataframe, positions from this data frame will be used.
+#'   File path must be to a csv file to be read in as a data frame.
 #' @param overrideError station formatting will stop if insufficient buoy position data is
 #'   present. Set this to \code{TRUE} to override this behaviour and continue loading
 #'   the station and mark problematic buoys with \code{error=TRUE}.
+#' @param dateFormat character string giving date-time format as used by strptime. This
+#'   is used to format the dates of data supplied by buoyPositions.
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}, Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
@@ -22,19 +25,32 @@
 #' @importFrom stringdist stringsim
 #' @export
 #'
-formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
-  # Make new position list favoring file positions.
-  # Need to adjust calculateOffset part to check for missing positions
-  # or stop first
+formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
+                          dateFormat = '%Y-%m-%d %H:%M:%S', ...) {
   dbPositions <- formatBuoyPosition(db)
-  buoyPositions <- if(!is.null(buoyPositions)) {
+  # buoyPositions either not supplied, supplied as df, or as file path
+  if(is.character(buoyPositions)) {
+    if(!file.exists(buoyPositions)) {
+      stop('  File ', buoyPositions, ' does not exist.')
+    }
+    buoyPositions <- read.csv(buoyPositions, stringsAsFactors = FALSE)
+  }
+  # Checking for proper formatting
+  if(is.data.frame(buoyPositions)) {
     neededCols <- c('Buoy', 'UTC', 'Latitude', 'Longitude')
     if(!all(neededCols %in% colnames(buoyPositions))) {
       stop('Provided buoyPositions file must have columns ', paste(neededCols, collapse=', '))
     }
-    buoyPositions$UTC <- as.POSIXct(buoyPositions$UTC, tz='GMT')
-    split(buoyPositions, buoyPositions$Buoy)
+    buoyPositions$UTC <- as.POSIXct(buoyPositions$UTC, tz='GMT', format=dateFormat)
+    if('Station' %in% colnames(buoyPositions)) {
+      buoyPositions <- mutate(buoyPositions, Station = gsub('\\..*$', '', Station)) %>%
+        filter(Station == gsub('\\..*$', '', attr(db, 'station')))
+    }
+    buoyPositions <- select(buoyPositions, Buoy, UTC, Latitude, Longitude) %>%
+      arrange(Buoy, UTC) %>%
+      split(., .$Buoy)
   }
+  # Make position list favoring user defined positions over db positions
   position <- dbPositions
   for(b in names(buoyPositions)) {
     position[[b]] <- buoyPositions[[b]]
@@ -53,14 +69,14 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
 
   missing.positions <- setdiff(buoyList, names(position))
   if(length(missing.positions) > 0) {
+    message('**CRITICAL: Missing deployment position information for buoy(s) ',
+            paste(missing.positions, collapse = ', '), '. \n',
+            '** You must fix in the database or provide as a separate csv file.')
     if(!overrideError) {
-      stop('  CRITICAL: Missing deployment position information for buoy(s) ',
-           paste(missing.positions, collapse = ', '), '. \n',
-           '   You must fix in the database or provide as a separate file.')
+      buoyPositions <- file.choose()
+      return(formatStation(db = db, buoyPositions = buoyPositions,
+                           overrideError = overrideError, dateFormat = dateFormat, ...))
     } else {
-      message('  CRITICAL: Missing deployment position information for buoy(s) ',
-              paste(missing.positions, collapse = ', '), '. \n',
-              '   You must fix in the database or provide as a separate file.')
       for(b in missing.positions) {
         position[b] <- list(NULL)
         error[b] <- TRUE
@@ -94,6 +110,7 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
     position = position,
     calibration = calibration,
     effort = effort)
+  # Dont really want to carry this around if we dont have to. Used for checking in loadStations
   if(overrideError) {
     buoyTemp$error <- error
   }
@@ -103,20 +120,19 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
   detections <- formatDetections(db, buoys, ...)
   missing.detections <- setdiff(unique(detections$Buoy), buoyList)
   if(length(missing.detections) > 0) {
+    message('**CRITICAL: Detections are present for buoy(s)',
+            paste(missing.detections, collapse = ', '),
+            ', but there is no deployment, effort, or calibration data. \n',
+            '** You must fix in the database or provide deployment position in a separate csv file.')
     if(!overrideError) {
-      stop('  CRITICAL: Detections are present for buoy(s)',
-           paste(missing.detections, collapse = ', '),
-           ', but there is no deployment, effort, or calibration data. \n',
-           '   You must fix in the database or provide deployment position in a separate file.')
+      buoyPositions <- file.choose()
+      return(formatStation(db = db, buoyPositions = buoyPositions,
+                           overrideError = overrideError, dateFormat = dateFormat, ...))
     } else {
       for(b in missing.detections) {
         buoys[[b]] <- list(error=TRUE)
       }
       buoys <- buoys[order(names(buoys))]
-      message('  CRITICAL: Detections are present for buoy(s)',
-              paste(missing.detections, collapse = ', '),
-              ', but there is no deployment, effort, or calibration data. \n',
-              '   You must fix in the database or provide deployment position in a separate file.')
     }
   }
   st <- list(buoys = buoys, detections = detections)
@@ -129,14 +145,8 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE, ...) {
 #'
 formatBuoyPosition <- function(db) {
   # a list of position data for each buoy
-  # db$HydrophoneStreamers %>%
-  #   mutate(Buoy = as.character(StreamerIndex)) %>%
-  #   # filter(DifarModuleAction=='deployed') %>%
-  #   select(Buoy, UTC, Latitude, Longitude) %>%
-  #   arrange(Buoy, UTC) %>%
-  #   split(., .$Buoy)
-
-  # Force to use new version where this column exists?
+  # Checks for deployed in DifarModuleAction column.
+  # This should be present in all PG versions >= 1.15.
   df <- db$HydrophoneStreamers
   if('DifarModuleAction' %in% colnames(df)) {
     df %>%
@@ -147,7 +157,6 @@ formatBuoyPosition <- function(db) {
       arrange(Buoy, UTC) %>%
       split(., .$Buoy)
   }
-
 }
 
 #' @rdname formatStation
