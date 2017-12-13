@@ -1,6 +1,7 @@
 # Testing zone.
 library(PAMsbuoy)
 library(dplyr)
+library(tools)
 db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB_S89S90s_P1.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment DIFAR - Circles.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
@@ -10,8 +11,24 @@ buoyPos <- data.frame(Buoy = '1', UTC='2014-08-08 03:19:27',
                       Latitude = 34.6, Longitude = -125)
 station <- formatStation(db, override = F, dateFormat = '%m/%d/%Y %H:%M')
 
-# Calcurceas
-calStations <- loadStations('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/', extraCols='TrackedGroup')
+## Calcurceas
+# calPositions <-
+#   do.call(
+#     rbind,
+#     lapply(
+#       list_files_with_exts('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite',
+#                            exts='sqlite3'), function(f) {
+#                              myDb <- loadDB(f)
+#                              myDb$HydrophoneStreamers %>%
+#                                mutate(Station = attr(myDb, 'station'), Buoy = StreamerIndex) %>%
+#                                select(UTC, Longitude, Latitude, Buoy, Station)
+#                            }))
+# saveRDS(calPositions, file='../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.RDS')
+# write.csv(calPositions, file='../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.csv')
+# calPositions <- readRDS('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.RDS')
+# calPositions <- read.csv('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.csv')
+calStations <- loadStations('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/', extraCols='TrackedGroup',
+                            buoyPositions = '../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.csv')
 # Sette
 setteStations <- loadStations('../SonoBuoy/Data/HICEAS_2017/Sette/Database/')
 # Lasker
