@@ -12,17 +12,17 @@ buoyPos <- data.frame(Buoy = '1', UTC='2014-08-08 03:19:27',
 station <- formatStation(db, override = F, dateFormat = '%m/%d/%Y %H:%M')
 
 ## Calcurceas
-# calPositions <-
-#   do.call(
-#     rbind,
-#     lapply(
-#       list_files_with_exts('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite',
-#                            exts='sqlite3'), function(f) {
-#                              myDb <- loadDB(f)
-#                              myDb$HydrophoneStreamers %>%
-#                                mutate(Station = attr(myDb, 'station'), Buoy = StreamerIndex) %>%
-#                                select(UTC, Longitude, Latitude, Buoy, Station)
-#                            }))
+calPositions <-
+  do.call(
+    rbind,
+    lapply(
+      list_files_with_exts('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite',
+                           exts='sqlite3'), function(f) {
+                             myDb <- loadDB(f)
+                             myDb$HydrophoneStreamers %>%
+                               mutate(Station = attr(myDb, 'station'), Buoy = StreamerIndex) %>%
+                               select(UTC, Longitude, Latitude, Buoy, Station)
+                           }))
 # saveRDS(calPositions, file='../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.RDS')
 # write.csv(calPositions, file='../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.csv')
 # calPositions <- readRDS('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.RDS')
