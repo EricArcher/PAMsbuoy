@@ -75,3 +75,6 @@ buoys <- myStation$buoys
 dets <- cbind(dets, buoyPosition(dets, transpose(buoys)$position))
 drawBearings(dets, map=F)
 
+station <- checkCalibrations(station)
+checkCalibrations(station)
+
