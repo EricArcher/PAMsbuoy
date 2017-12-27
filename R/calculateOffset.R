@@ -38,8 +38,12 @@ calculateOffset <- function(calibration, position, db) {
       BoatLatitude = ship.pos$Latitude,
       BoatLongitude = ship.pos$Longitude
     )
-    # calculate offset = true - difar bearing
-    b.cal$offset <- b.cal$true.bearing - b.cal$DIFARBearing
+    # calculate offset = true - difar bearing. Make range -180 to 180
+    b.cal$offset <- sapply((b.cal$true.bearing - b.cal$DIFARBearing) %% 360, function(x) {
+      if(x > 180) {
+        x-360
+      } else x
+    })
     calibration[[b]] <- b.cal
   }
   calibration
