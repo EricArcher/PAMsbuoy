@@ -6,15 +6,13 @@
 
 # Table with Station #, lat/long, time, recording length, # species breakdown,
 # some kind of estimate of buoy angle error, drift calibration if we did it
+# DONT KNOW RECORDING LENGTH
 
 # For plotting of a station we want to be able to show localizations and possibly
 # the location of the ship
 
 # Probably want warnings about multiple deployment position records for buoys. Station 2 and 3 have a bunch of weird
 # shit (lasker) in the streamers table. Looks like stuff got split between two dbs over the days.
-
-# Species summary provides detection for each buoy, but isnt trying to match them up to say 'these two calls on
-# these buoys are the same call' using MatchedAngles or whatever Eric has it called.
 
 # Species maps - Need to deal with buoys. Should we show all factor levels when they arent present (the legend)
 
@@ -34,9 +32,6 @@
 # Bits with variation changes based on bearing angle will be kind of a separate problem. Wont necessarily try and
 # deal with it now, but say 'hey look at this shit'
 
-# Buoy calibration summary. Are there buoys I dont trust? Use manipulate to go through histograms of calibration values
-# Loop through all buoy calibrations - have user mark ABC before looking at next one. Add flag to buoy info list
-
 # Matching calls will need more flexibility built in
 
 # Sound source estimation. Needs a system calibration and a buoy calibration. Need localization to get a distance
@@ -47,10 +42,10 @@
 # get same bounding box? or maybe a better way. Want same frame for each one, actually prob just bound on the
 # extremes of localization or whatever we have.
 
-# calibration graph: 10 degree guidelines? -180 to 180. Picking one?
-# TO DO: Add a check if too many $. Possibly check to look for [[]] and $. Or just check if $buoys
-# is part of the station, then shit out an error?
-# make prettyful.
+# Functionality to combine _P1 and such things automatically? Is this common, or just DIY?
+
+# labelDetection breaks if we have Ids in MatchedAngles that aren't in Id column. No idea how this happened.
+# temp fix for now, will just remove bad Ids from MA and warn you where it happened.
 
 #### ORDER OF WORK ####
 # 1) Buoy calibration. 2) Buoy drift. 3) Error checking? 4) Format output for models

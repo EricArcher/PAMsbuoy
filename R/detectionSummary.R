@@ -34,6 +34,7 @@ detectionSummary <- function(stationList) {
         st[i, sp] <- filter(detectionData, Species == sp,
                             Buoy == st$Buoy[i],
                             Station == st$Station[i]) %>% nrow()
+        # Getting unique calls using 'detection' column from formatting
         st[i, paste0('unique_', sp)] <- filter(detectionData, Species == sp,
                                                Station == st$Station[i]) %>% distinct(detection) %>% nrow()
       }

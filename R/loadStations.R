@@ -23,7 +23,9 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
   fnames <- tools::list_files_with_exts(folder, exts = db.ext)
   fnames <- fnames[order(nchar(fnames), fnames)]
   error <- FALSE
-  st.list <- sapply(seq_along(fnames), function(f) {
+  # need to wrap this in a try, otherwise if theres an error we dont close the sink connection
+  try({
+    st.list <- sapply(seq_along(fnames), function(f) {
     if((f %% 10)==1 | f == length(fnames)) {
       cat('Loading station ', f, ' of ', length(fnames),'. \n')
     }
@@ -37,6 +39,7 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
     }
     station
   }, simplify = FALSE)
+  })
   sink(type = "message")
   file.show(log.fname)
   if(error) {
@@ -49,7 +52,11 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
       return(loadStations(folder=folder, db.ext=db.ext, buoyPositions = buoyPositions, ...))
     })
   }
-  names(st.list) <- basename(fnames)
-  attr(st.list, "survey") <- folder
-  st.list
+  if(exists('st.list')) {
+    names(st.list) <- basename(fnames)
+    attr(st.list, "survey") <- folder
+    st.list
+  } else {
+    stop('loadStations failed. See error log.')
+  }
 }

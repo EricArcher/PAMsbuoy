@@ -2,6 +2,7 @@
 library(PAMsbuoy)
 library(dplyr)
 library(tools)
+library(ggplot2)
 db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB_S89S90s_P1.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment DIFAR - Circles.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
@@ -65,6 +66,9 @@ for(i in 1:nrow(driftData)) {
 plot_ly(x=driftData$rate, y=driftData$angle, color=driftData$logl) %>% add_surface()
 plot_ly(z=grid) %>% add_surface()
 
+# DRiFT on ReAL DAtA
+sixTwenty <- loadStations('../SonoBuoy/Data/PAST_20170620')
+# wtf 2585 2591
 # Bearing drawing
 source('./devel/drawBearing.R')
 library(manipulate)
@@ -77,4 +81,3 @@ drawBearings(dets, map=F)
 
 station <- checkCalibrations(station)
 checkCalibrations(station)
-
