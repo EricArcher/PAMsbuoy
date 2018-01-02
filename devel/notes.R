@@ -47,6 +47,8 @@
 # labelDetection breaks if we have Ids in MatchedAngles that aren't in Id column. No idea how this happened.
 # temp fix for now, will just remove bad Ids from MA and warn you where it happened.
 
+# drift needs to check inputs are proper form otherwise you get weird errors
+
 #### ORDER OF WORK ####
 # 1) Buoy calibration. 2) Buoy drift. 3) Error checking? 4) Format output for models
 # 5) sound source estimation? 6) localization?

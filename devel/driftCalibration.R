@@ -12,6 +12,11 @@
 #' @export
 #'
 driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0)) {
+  # Check if it is just one buoy of a station, instead of the list of all buoys
+  if('position' %in% names(buoy.data)) {
+    buoy.data <- list(buoy.data)
+    names(buoy.data) <- buoy.data[[1]]$position$Buoy[1]
+  }
   lapply(buoy.data, function(buoy) {
     start <- buoy$position[1,]
     if(!graph) {

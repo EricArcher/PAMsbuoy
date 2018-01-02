@@ -53,7 +53,24 @@ mapDetections(detectionSummary(setteStations[-2:-1]))
 
 # Drift
 dtest <- driftCalibration(station$buoys)
+# DRiFT on ReAL DAtA
+sixTwenty <- loadStations('../SonoBuoy/Data/PAST_20170620')
+ggplot(sixTwenty$`PAST20Jun2017_pg11511_sbExperiment DIFAR.sqlite3`$buoys$`0`$calibration[1:30,],
+       aes(x=UTC, y=offset)) + geom_point()
+
+filtBuoys <- lapply(sixTwenty$`PAST20Jun2017_pg11511_sbExperiment DIFAR.sqlite3`$buoys, function(b) {
+  filtered <- b$calibration[1:20,]
+  b$calibration <- filtered
+  b
+})
+
+dtest <- driftCalibration(sixTwenty)
+dtest <- driftCalibration(filtBuoys)
+end <- endPoint(sixTwenty$`PAST20Jun2017_pg11511_sbExperiment DIFAR.sqlite3`$buoys,
+                dtest, 20, 0)
+
 lapply(dtest, function(x) sqrt(diag(solve(-x$hessian))))
+
 boat <- calStations$`1647_SB_S4S5s.sqlite3`$buoys$`0`$calibration
 start <- calStations$`1647_SB_S4S5s.sqlite3`$buoys$`0`$position[1,]
 rates <- seq(0,3, length.out=30)
@@ -66,9 +83,6 @@ for(i in 1:nrow(driftData)) {
 plot_ly(x=driftData$rate, y=driftData$angle, color=driftData$logl) %>% add_surface()
 plot_ly(z=grid) %>% add_surface()
 
-# DRiFT on ReAL DAtA
-sixTwenty <- loadStations('../SonoBuoy/Data/PAST_20170620')
-# wtf 2585 2591
 # Bearing drawing
 source('./devel/drawBearing.R')
 library(manipulate)
@@ -81,3 +95,19 @@ drawBearings(dets, map=F)
 
 station <- checkCalibrations(station)
 checkCalibrations(station)
+
+endPoint <- function(buoys, drift, endNum, buoyNum) {
+  buoys <- buoys[[as.character(buoyNum)]]
+  drift <- drift[[as.character(buoyNum)]]
+  startTime <- buoys$position$UTC[1]
+  endTime <- buoys$calibration$UTC[endNum]
+  distance <- difftime(startTime, endTime, units='secs')*drift$rate/3600
+  end <- swfscMisc::destination(buoys$position$Latitude[1],
+                                buoys$position$Longitude[1],
+                                drift$bearing, distance, units='km')
+  data.frame(Latitude=c(end[1], buoys$position$Latitude[1]),
+             Longitude=c(end[2], buoys$position$Longitude[1]),
+             Time=c(startTime, endTime), Point=c('Start', 'End'))
+}
+
+

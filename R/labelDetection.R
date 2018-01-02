@@ -19,7 +19,7 @@ labelDetection <- function(df) {
   if(!all(unlist(grp) %in% df$Id)) {
     missingIds <- unique(unlist(grp)[which(!(unlist(grp) %in% df$Id))])
     badRowIds <- which(sapply(grp, function(x) any(x %in% missingIds)))
-    warning('Id(s) ', paste(missingIds, collapse=', '), ' are in the MatchedAngles ',
+    message('  Id(s) ', paste(missingIds, collapse=', '), ' are in the MatchedAngles ',
             'column but not the Id column. \n',
              '  Check rows with Id(s) ', paste(badRowIds, collapse=', '),
             ' in the DIFAR_Localisation table.')
