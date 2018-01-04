@@ -1,6 +1,8 @@
 # Drift Simulated Testing
 library(ggplot2)
 library(dplyr)
+library(viridisLite)
+library(plotly)
 
 makeCircle <- function(center, distance, shape = 0, boatKnots = 10,
                        angles=seq(from=0, to=360, length.out=360)) {
@@ -44,38 +46,68 @@ driftBuoy <- function(start, rate, bearing, times) {
 center <- c(32, -117); distance <- 1.5; shape=0; angles=seq(from=0, to=360, length.out=360); boatKnots=10
 
 start <- data.frame(Latitude=32, Longitude=-117, UTC=as.POSIXct('2017-08-08 08:00:00'), Buoy=0)
-lines <- makeLines(start=start, distances=c(1,2), boatKnots=10, angle=0,turn=135,nPoints=20)
-buoy <- driftBuoy(start, rate=1, bearing=90, times=lines$UTC)
-lines$Buoy <- 0
-lines$DIFARBearing <- mapply(swfscMisc::bearing, buoy$Latitude, buoy$Longitude,
-                             lines$BoatLatitude, lines$BoatLongitude)[1,]
+boatLines <- makeLines(start=start, distances=c(1,2), boatKnots=10, angle=0,turn=135,nPoints=20)
+buoy <- driftBuoy(start, rate=2, bearing=45, times=boatLines$UTC)
+boatLines$Buoy <- 0
+boatLines$DIFARBearing <- mapply(swfscMisc::bearing, buoy$Latitude, buoy$Longitude,
+                             boatLines$BoatLatitude, boatLines$BoatLongitude)[1,]
 
-driftCalibration(list(position=start, calibration=lines))
+driftDf <- likeDf(nAngles=30,nRates=30, boat=boatLines, start=start) %>%
+  arrange(desc(Value))
+ggplot(driftDf, aes(x=Angle, y=Rate, color=Value)) + geom_point(size=8) +
+  scale_color_gradientn(colors=viridis(256, direction=1, option='viridis'))
 
-testit <- function(rate, bearing) {
-  buoy <- driftBuoy(start, rate, bearing, times=lines$UTC)
-  lines$Buoy <- 0
-  lines$DIFARBearing <- mapply(swfscMisc::bearing, buoy$Latitude, buoy$Longitude,
-                               lines$BoatLatitude, lines$BoatLongitude)[1,]
-  drift <- driftCalibration(list(position=start, calibration=lines))[[1]]
+ggplot(driftDf, aes(x=Angle, y=Rate, z=Value, fill=Value)) + geom_tile() +
+  scale_fill_gradientn(colors=viridis(256)) +
+  coord_cartesian(xlim=c(0,360), ylim=c(0,3), expand=FALSE)
+
+driftCalibration(list(position=start, calibration=boatLines))
+
+testit <- function(rate, bearing, plot=FALSE) {
+  buoy <- driftBuoy(start, rate, bearing, times=boatLines$UTC)
+  boatLines$Buoy <- 0
+  boatLines$DIFARBearing <- mapply(swfscMisc::bearing, buoy$Latitude, buoy$Longitude,
+                               boatLines$BoatLatitude, boatLines$BoatLongitude)[1,]
+  drift <- driftCalibration(list(position=start, calibration=boatLines))[[1]]
   end <- swfscMisc::destination(start$Latitude, start$Longitude, drift$bearing,
-                                drift$rate*difftime(lines$UTC[nrow(lines)], start$UTC, units='secs')/3600,
+                                drift$rate*difftime(boatLines$UTC[nrow(boatLines)], start$UTC, units='secs')/3600,
                                 units='km')
-  print(ggplot() + geom_point(data=lines, aes(x=BoatLongitude, y=BoatLatitude, color='Boat')) +
-          geom_point(data=buoy, aes(x=Longitude, y=Latitude, color='Buoy')) +
-          geom_segment(aes(x=start$Longitude, xend=end[2], y=start$Latitude, yend=end[1], color='Drift'), size=2, alpha=.4))
+  if(plot) {
+    print(ggplot() + geom_point(data=boatLines, aes(x=BoatLongitude, y=BoatLatitude, color='Boat')) +
+            geom_point(data=buoy, aes(x=Longitude, y=Latitude, color='Buoy')) +
+            geom_segment(aes(x=start$Longitude, xend=end[2], y=start$Latitude, yend=end[1], color='Drift'),
+                         size=2, alpha=.4))
+  }
   drift
 }
-testit(3,45)
 
-ggplot() + geom_point(data=lines, aes(x=BoatLongitude, y=BoatLatitude, color='Boat')) +
-  geom_point(data=buoy, aes(x=Longitude, y=Latitude, color='Buoy'))
-
-circ <- makeCircle(center=center, distance=distance, shape=shape, boatKnots=boatKnots, angles=angles)
-# dists <- mapply(swfscMisc::distance, center[1], center[2], circ$Latitude, circ$Longitude, units='km')
-# ggplot(circ, aes(x=Longitude, y=Latitude)) + geom_point() +
+testit(.5,45, plot=TRUE)
+#
+# ggplot() + geom_point(data=boatLines, aes(x=BoatLongitude, y=BoatLatitude, color='Boat')) +
+#   geom_point(data=buoy, aes(x=Longitude, y=Latitude, color='Buoy'))
+#
+# boatCirc <- makeCircle(center=center, distance=distance, shape=shape, boatKnots=boatKnots, angles=angles)
+# dists <- mapply(swfscMisc::distance, center[1], center[2], boatCirc$Latitude, boatCirc$Longitude, units='km')
+# ggplotboatCcirc, aes(x=Longitude, y=Latitude)) + geom_point() +
 #   geom_point(aes(x=center[2], y=center[1]), color='darkgreen', size=3)
 # qplot(dists)
 
+likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start) {
+  angles <- seq(0,360, length.out=nAngles)
+  rates <- seq(0, 3, length.out=nRates)
+  do.call(rbind, lapply(rates, function(r) {
+    value <- sapply(angles, function(a) {
+      driftLogl(boat, start, c(r,a))
+    })
+    data.frame(Rate=r, Angle=angles, Value=value)
+  }))
+}
+
+t <- do.call(rbind, lapply(driftDf$Rate, function(r) {
+  value <- sapply(driftDf$Angle, function(a) {
+    driftLogl(boatLines, start, c(r,a))
+  })
+  data.frame(Rate=r, Angle=driftDf$Angle, Value=value)
+}))
 
 

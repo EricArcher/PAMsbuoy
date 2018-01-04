@@ -58,7 +58,10 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
   calibration <- formatBuoyCalibration(db, position)
   effort <- formatBuoyEffort(db)
 
-  buoyList <- unique(c(names(position), names(calibration), names(effort)))
+  difarNames <- unique(db$DIFAR_Localisation$Channel)
+  buoyList <- unique(c(names(position), names(calibration), names(effort), difarNames))
+  ########## FIX HERE NOT SURE HOW TO LET IT CONTINUE ON WITHOUT BREAKING ######
+  #### DONT WANT TO STOP OR ONE BAD STATION FUCKS YOUR WHOLE THING ####
   # if(length(buoyList) == 0) {
   #   stop(
   error <- list()

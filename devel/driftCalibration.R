@@ -11,7 +11,7 @@
 #'
 #' @export
 #'
-driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0)) {
+driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0), ...) {
   # Check if it is just one buoy of a station, instead of the list of all buoys
   if('position' %in% names(buoy.data)) {
     buoy.data <- list(buoy.data)
@@ -19,7 +19,13 @@ driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0)) {
   }
   lapply(buoy.data, function(buoy) {
     start <- buoy$position[1,]
-    if(!graph) {
+    if(graph) {
+      driftDf <- likeDf(nAngles=30,nRates=30, boat=boatLines, start=start) %>%
+        arrange(desc(Value))
+      ggplot(driftDf, aes(x=Angle, y=Rate, color=log(-Value))) + geom_point(size=8) +
+        scale_color_gradientn(colors=viridis(256, direction=-1, option='magma'))
+
+    } else {
       drift <- optim(par=initial, driftLogl, boat=buoy$calibration, start=start,
                      control=list('fnscale'=-1), hessian=TRUE, method='L-BFGS-B', lower=c(0, 0), upper=c(3, 360))
     }
@@ -39,9 +45,22 @@ driftLogl <- function(boat, start, drift) {
 }
 
 expectedBearing <- function(boat, start, drift.rate, drift.phi) {
-  drift.distance <- drift.rate*difftime(boat$UTC, start$UTC, units='secs')/3600 # using seconds
+  drift.distance <- sapply(boat$UTC, function(t) {
+    drift.rate*difftime(t, start$UTC, units='secs')/3600 # using seconds
+  })
   buoyLoc <- matrix(
     swfscMisc::destination(start$Latitude, start$Longitude, brng=drift.phi, distance=drift.distance, units='km'),
     ncol=2)
   swfscMisc::bearing(buoyLoc[,1], buoyLoc[,2], boat$BoatLatitude, boat$BoatLongitude)
+}
+
+likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start) {
+  angles <- seq(0,360, length.out=nAngles)
+  rates <- seq(0, 3, length.out=nRates)
+  do.call(rbind, lapply(rates, function(r) {
+    value <- sapply(angles, function(a) {
+      driftLogl(boat, start, c(r,a))
+    })
+    data.frame(Rate=r, Angle=angles, Value=value)
+  }))
 }

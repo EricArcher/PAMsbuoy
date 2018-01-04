@@ -5,12 +5,13 @@ library(tools)
 library(ggplot2)
 db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB_S89S90s_P1.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment DIFAR - Circles.sqlite3')
+db <- loadDB('../SonoBuoy/Data/PAST_20160607_Edited.sqlite3') # no calibration only weird difar
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
 db <- loadDB('../SonoBuoy/Data/HICEAS_2017/Sette/Database/1706_pg11511_sb_10_20170722.sqlite3')
 db <- loadDB('./devel/final db formatting/FinalFormat_Station2.sqlite3')
 buoyPos <- data.frame(Buoy = '1', UTC='2014-08-08 03:19:27',
                       Latitude = 34.6, Longitude = -125)
-station <- formatStation(db, override = F, dateFormat = '%m/%d/%Y %H:%M')
+station <- formatStation(db, overrideError = F, dateFormat = '%m/%d/%Y %H:%M')
 
 ## Calcurceas
 calPositions <-
