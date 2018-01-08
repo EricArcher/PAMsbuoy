@@ -27,7 +27,8 @@ driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0), ...) {
 
     } else {
       drift <- optim(par=initial, driftLogl, boat=buoy$calibration, start=start,
-                     control=list('fnscale'=-1), hessian=TRUE, method='L-BFGS-B', lower=c(0, 0), upper=c(3, 360))
+                     control=list('fnscale'=-1, maxit=10000, parscale=c(30,1)),
+                     hessian=TRUE, method='L-BFGS-B', lower=c(0, 0), upper=c(3, 360))
     }
     list(rate=drift$par[1], bearing=drift$par[2], hessian=drift$hessian)
   })
