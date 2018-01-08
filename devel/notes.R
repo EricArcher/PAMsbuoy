@@ -51,6 +51,8 @@
 
 # Check buoy position stuff (loading PAST_20160607 data). Doesnt seem like error is happening if its missing
 
+# UIDS not loaded ?
+
 #### ORDER OF WORK ####
 # 1) Buoy calibration. 2) Buoy drift. 3) Error checking? 4) Format output for models
 # 5) sound source estimation? 6) localization?

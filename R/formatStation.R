@@ -60,10 +60,14 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
 
   difarNames <- unique(db$DIFAR_Localisation$Channel)
   buoyList <- unique(c(names(position), names(calibration), names(effort), difarNames))
-  ########## FIX HERE NOT SURE HOW TO LET IT CONTINUE ON WITHOUT BREAKING ######
-  #### DONT WANT TO STOP OR ONE BAD STATION FUCKS YOUR WHOLE THING ####
-  # if(length(buoyList) == 0) {
-  #   stop(
+
+  # If somehow there is no information, just return NULL with a big warning
+  if(length(buoyList) == 0) {
+    message('**CRITICAL: There are no position, effort, calibration, or DIFAR Localisation records')
+    st <- NULL
+    attr(st, 'station') <- attr(db, 'station')
+    return(st)
+  }
   error <- list()
   for(b in buoyList) {
     error[b] <- FALSE
