@@ -53,6 +53,10 @@
 
 # UIDS not loaded ?
 
+# Adjust makeLines to be able to be iterative - just call again on last point to turn again?
+# Bias makes it fuuuuuuucked
+# Should probably just move all the functions into another .R
+
 #### ORDER OF WORK ####
 # 1) Buoy calibration. 2) Buoy drift. 3) Error checking? 4) Format output for models
 # 5) sound source estimation? 6) localization?

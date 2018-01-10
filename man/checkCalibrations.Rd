@@ -4,7 +4,8 @@
 \alias{checkCalibrations}
 \title{Check Buoy Calibrations}
 \usage{
-checkCalibrations(stationList, recheck = FALSE)
+checkCalibrations(stationList, recheck = FALSE, goodRange = 10,
+  midFun = median)
 }
 \arguments{
 \item{stationList}{a list of sonobuoy stations as created by \code{loadStations},
@@ -14,7 +15,9 @@ or a single station as created by \code{formatStation}}
 \code{FALSE}, any buoys with existing BuoyQuality will be skipped over.}
 }
 \value{
-a list of sonobuoy stations with an added BuoyQuality field for each buoy
+a list of sonobuoy stations with an added BuoyQuality field for each buoy.
+  Will also directly modify the calStations object even if the result is not
+  assigned to a variable.
 }
 \description{
 Loop through histograms of buoy calibration offsets for each

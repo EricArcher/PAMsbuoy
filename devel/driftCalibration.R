@@ -34,9 +34,8 @@ driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0), ...) {
   })
 }
 
-driftLogl <- function(boat, start, drift) {
+driftLogl <- function(boat, start, drift, sd=4) {
   expected <- expectedBearing(boat, start, drift[1], drift[2])
-  sd <- 4
   error <- sapply((boat$DIFARBearing - expected) %% 360, function(x) {
     if(x < abs(x-360)) {x}
     else {x-360}
@@ -52,7 +51,7 @@ expectedBearing <- function(boat, start, drift.rate, drift.phi) {
   buoyLoc <- matrix(
     swfscMisc::destination(start$Latitude, start$Longitude, brng=drift.phi, distance=drift.distance, units='km'),
     ncol=2)
-  swfscMisc::bearing(buoyLoc[,1], buoyLoc[,2], boat$BoatLatitude, boat$BoatLongitude)
+  swfscMisc::bearing(buoyLoc[,1], buoyLoc[,2], boat$BoatLatitude, boat$BoatLongitude)[1:nrow(boat)]
 }
 
 likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start) {
