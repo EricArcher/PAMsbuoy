@@ -7,13 +7,15 @@
 #'   a zoom level of 10 until all data fits. If an integer, will force that zoom
 #'   level to be used.
 #' @param crop flag whether or not to automatically crop the map to range of your data
+#' @param map Optional, a ggmap object to plot on. If left as NULL, will be created automatically
+#'   by the getMap function. Can be included to reduce calls to getMap.
 #'
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
 #' @import ggplot2
 #' @export
 #'
-mapStations <- function(stationList, zoom='auto', crop=FALSE) {
+mapStations <- function(stationList, zoom='auto', crop=FALSE, map=NULL) {
   buoyPositions <- do.call(rbind, lapply(stationList, function(s) {
     do.call(rbind, lapply(s$buoys, function(b) {
       buoyDat <- b$position[1,]
@@ -27,10 +29,12 @@ mapStations <- function(stationList, zoom='auto', crop=FALSE) {
   boundLong <- range(buoyPositions$Longitude)
   boundLat <- range(buoyPositions$Latitude)
 
-  if(zoom=='auto') {
-    map <- getMap(buoyPositions, force=FALSE)
-  } else {
-    map <- getMap(buoyPositions, force=TRUE, zoom=round(zoom))
+  if(is.null(map)) {
+    if(zoom=='auto') {
+      map <- getMap(buoyPositions, force=FALSE)
+    } else {
+      map <- getMap(buoyPositions, force=TRUE, zoom=round(zoom))
+    }
   }
 
   # Colorblind palette. Just in case adding color by factor later.

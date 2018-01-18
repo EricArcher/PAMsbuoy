@@ -44,5 +44,7 @@ detectionSummary <- function(stationList) {
   gather_(detSummary, 'Species', 'Count', specList) %>%
     gather_('USpecies', 'UniqueCount', paste0('unique_', specList)) %>%
     mutate_('USpecies' = ~ gsub('unique_', '', USpecies)) %>%
-    filter_('USpecies==Species') %>% select_('-USpecies')
+    filter_('USpecies==Species') %>% select_('-USpecies') %>%
+    rename_(.dots = setNames(c('Count', 'UniqueCount'), c('NumDetections', 'UniqueDetections'))) %>%
+    arrange_(.dots = c('Station', 'Species'))
 }

@@ -112,4 +112,5 @@ endPoint <- function(buoys, drift, endNum, buoyNum) {
              Time=c(startTime, endTime), Point=c('Start', 'End'))
 }
 
+detSummary %>% mutate(Ktest = paste0(Species,' [', Count,']')) %>% head()
 

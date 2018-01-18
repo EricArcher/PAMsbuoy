@@ -12,12 +12,13 @@
 #' @param center the location to center the map on. If \code{NULL}, will use the
 #'   mean of the range of the data. If not \code{NULL} it must be a named vector
 #'   with values \code{lon} and \code{lat}
+#' @param quiet \code{FALSE} to report zoom level used
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
 #' @importFrom ggmap get_map ggmap
 #' @export
 #'
-getMap <- function(positions, force=FALSE, zoom=10, center=NULL) {
+getMap <- function(positions, force=FALSE, zoom=10, center=NULL, quiet=FALSE) {
   # We cant automatically map near the poles yet, just stop for now.
   poleThresh <- 70
   if(max(abs(positions$Latitude)) > poleThresh) {
@@ -57,7 +58,9 @@ getMap <- function(positions, force=FALSE, zoom=10, center=NULL) {
     # cat('Zoom level', zoom, 'is too close. Trying', zoom-1,'. \n')
     return(getMap(positions, force, zoom-1))
   }
-  cat('Zoom level', zoom, 'being used.')
+  if(!quiet) {
+    cat('Zoom level', zoom, 'being used.')
+  }
   ggmap(map)
 }
 

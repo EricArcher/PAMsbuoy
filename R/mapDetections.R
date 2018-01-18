@@ -28,7 +28,7 @@
 #' @importFrom RColorBrewer brewer.pal
 #' @export
 #'
-mapDetections <- function(detectionData, species='all', combine=TRUE, value='Count', map=NULL,
+mapDetections <- function(detectionData, species='all', combine=TRUE, value='NumDetections', map=NULL,
                           size=3, nrow=1, palette='Reds', nGroups=6, grouping='Station') {
   detectionData$PlotMe <- detectionData[[value]]
   detectionData <- if(all(species %in% 'all')) {

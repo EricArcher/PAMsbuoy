@@ -24,10 +24,12 @@
 
 # Drift shit - try and get guidelines from our run around in circles data. Or simulated. Need some kind of
 # half assed guidelines.
-
-# Drift simulations? Just make a track of ship locations as a circle or some shit around a fixed deployment point
-# can then change the time or someting for each one. Need to work first under assumption that our angles are good
-# then we can go back and say 'what if they are bad' or just say make sure your angles are good.
+#####################################
+# BIAS FUCKS IT, BUT IF YOU HAVE A BIG ENOUGH RANGE YOU CAN SORT OF OVERCOME IT.
+# AT LEAST TO THE POINT OF 'ITS BETTER THAN NOT DOING IT'
+# IF YOU HAVE GOOD ANGLES, RANDOM VARIATION DOESNT MATTER
+# CHECK DRIFTSIMS AND SIMDIAGNOSTIC IN DRIFTSIM.R
+##########
 
 # Bits with variation changes based on bearing angle will be kind of a separate problem. Wont necessarily try and
 # deal with it now, but say 'hey look at this shit'
@@ -55,8 +57,8 @@
 
 # Adjust makeLines to be able to be iterative - just call again on last point to turn again?
 # Bias makes it fuuuuuuucked
-# Should probably just move all the functions into another .R
 
 #### ORDER OF WORK ####
 # 1) Buoy calibration. 2) Buoy drift. 3) Error checking? 4) Format output for models
 # 5) sound source estimation? 6) localization?
+
