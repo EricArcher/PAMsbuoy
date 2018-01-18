@@ -62,3 +62,8 @@
 # 1) Buoy calibration. 2) Buoy drift. 3) Error checking? 4) Format output for models
 # 5) sound source estimation? 6) localization?
 
+#################
+# Can you save a pretty html table as in image, then load into word doc?
+#
+# Create small report on drift stuff for Shannon showing results of simulations
+

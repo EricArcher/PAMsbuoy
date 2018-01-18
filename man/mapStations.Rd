@@ -4,7 +4,7 @@
 \alias{mapStations}
 \title{Create a Summary Map of All Sonobuoy Stations}
 \usage{
-mapStations(stationList, zoom = "auto", crop = FALSE)
+mapStations(stationList, zoom = "auto", crop = FALSE, map = NULL)
 }
 \arguments{
 \item{stationList}{list of sonobuoy stations returned by loadStations}
@@ -14,6 +14,9 @@ a zoom level of 10 until all data fits. If an integer, will force that zoom
 level to be used.}
 
 \item{crop}{flag whether or not to automatically crop the map to range of your data}
+
+\item{map}{Optional, a ggmap object to plot on. If left as NULL, will be created automatically
+by the getMap function. Can be included to reduce calls to getMap.}
 }
 \description{
 Return a ggmap object showing all sonobuoy stations.

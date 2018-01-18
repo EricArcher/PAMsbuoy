@@ -4,7 +4,7 @@ library(knitr)
 library(kableExtra)
 library(ggplot2)
 library(PAMsbuoy)
-stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary', outdir='Report') {
+stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary', outdir='Report', format='html') {
   if(!dir.exists(outdir)) {
     dir.create(outdir)
   }
@@ -23,8 +23,16 @@ stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary
   ggsave(filename='detectionPlot.jpeg', plot=detectionPlot, path=outdir,
          width=4, height=3, units='in')
   tempRows <- 20
-  rmarkdown::render(input='reportTemplate.Rmd', output_file = 'reportTemplate.docx',
-                    output_dir = outdir,quiet=TRUE, output_format='word_document')
+  switch(format,
+         html = {
+           inFile <- 'reportTemplateHtml.Rmd'
+           outFile <- 'reportTemplate.html'
+           outFormat <- 'html_document'
+         })
+  rmarkdown::render(input=inFile, output_file = outFile,
+                    output_dir = outdir,quiet=TRUE, output_format=outFormat)
+  # rmarkdown::render(input='reportTemplate.Rmd', output_file = 'reportTemplate.docx',
+  #                   output_dir = outdir,quiet=TRUE, output_format='word_document')
 }
 
 

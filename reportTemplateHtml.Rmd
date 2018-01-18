@@ -33,28 +33,15 @@ detSummary <- select(detSummary, -StationNum) %>%
   select(Station, KSpecies, KBuoy, Latitude, Longitude, UTC)
 myColumns <- c('Station', 'Species<br/>[Unique Detections]', 'Buoy<br/>[Detections]',
                'Latitude', 'Longitude', 'UTC')
-kable(detSummary, escape=FALSE, col.names=myColumns, digits=2, align='c')
-# kable(detSummary,  align='c', digits=2,
-#       col.names=myColumns, escape=FALSE) %>%
-#   kable_styling('bordered') %>%
-#   row_spec(odds, background='#edf0f4') %>%
-#   collapse_rows(which(colnames(detSummary) %in% c('KSpecies','Station')))
-
-
-
-# detSummary <- detSummary %>% 
-#   mutate(StationNum = as.numeric(as.factor(Station))) %>% 
-#   head(tempRows)
-# odds <- which(detSummary$StationNum %% 2 == 1)
-# detSummary <- select(detSummary, -StationNum) %>% 
-#   select(Station, Species, UniqueDetections, Buoy, NumDetections, Latitude, Longitude, UTC)
-# kable(detSummary, format='html', align='c', digits=2) %>% 
-#   kable_styling('bordered') %>% 
-#   row_spec(odds, background='#edf0f4') %>% 
-#   collapse_rows(which(colnames(detSummary) %in% c('Species','Station')))
-
-
+kable(detSummary,  align='c', digits=2,
+      col.names=myColumns, escape=FALSE, format='html') %>%
+  kable_styling('bordered') %>%
+  row_spec(odds, background='#edf0f4') %>%
+  collapse_rows(which(colnames(detSummary) %in% c('KSpecies','Station')))
 
 include_graphics('./Report/detectionPlot.jpeg')
+
 # detectionPlotCombined
 ```
+
+<img src="./Report/detectionPlot.jpeg" width="600">
