@@ -114,3 +114,20 @@ endPoint <- function(buoys, drift, endNum, buoyNum) {
 
 detSummary %>% mutate(Ktest = paste0(Species,' [', Count,']')) %>% head()
 
+detTest <- detSummary %>%
+  mutate(StationNum = as.numeric(as.factor(Station)),
+         KSpecies=paste0(Species, ' <b>[', UniqueCount,']</b>'),
+         KBuoy=paste0(Buoy,' <b>[', Count,']</b>')) %>%
+  head(10)
+odds <- which(detTest$StationNum %% 2 == 1)
+detTest <- select(detTest, -StationNum) %>%
+  select(Station, KSpecies, KBuoy, Latitude, Longitude, UTC)
+myColumns <- c('Station', 'Species<br/>[Unique Detections]', 'Buoy<br/>[Detections]',
+               'Latitude', 'Longitude', 'UTC')
+tbl <- kable(detTest,  align='c', digits=2,
+      col.names=myColumns, escape=FALSE, format='html') %>%
+  kable_styling('bordered') %>%
+  row_spec(odds, background='#edf0f4') %>%
+  collapse_rows(which(colnames(detSummary) %in% c('KSpecies','Station')))
+
+remDr <- remoteDriver(port=4445L)

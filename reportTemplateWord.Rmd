@@ -6,38 +6,12 @@ output:
   pdf_document: default
   html_document: default
   word_document: default
-header-includes:
-  - \usepackage{booktabs}
-  - \usepackage{longtable}
-  - \usepackage{array}
-  - \usepackage{multirow}
-  - \usepackage[table]{xcolor}
-  - \usepackage{wrapfig}
-  - \usepackage{float}
-  - \usepackage{colortbl}
-  - \usepackage{pdflscape}
-  - \usepackage{tabu}
-  - \usepackage{threeparttable}
-  - \usepackage{underscore}
 ---
 
 
 ```{r echo=FALSE}
-detSummary <- detSummary %>%
-  mutate(StationNum = as.numeric(as.factor(Station)),
-         KSpecies=paste0(Species, ' <b>[', UniqueDetections,']</b>'),
-         KBuoy=paste0(Buoy,' <b>[', NumDetections,']</b>')) %>%
-  head(tempRows)
-odds <- which(detSummary$StationNum %% 2 == 1)
-detSummary <- select(detSummary, -StationNum) %>%
-  select(Station, KSpecies, KBuoy, Latitude, Longitude, UTC)
-myColumns <- c('Station', 'Species<br/>[Unique Detections]', 'Buoy<br/>[Detections]',
-               'Latitude', 'Longitude', 'UTC')
-kable(detSummary, escape=FALSE, col.names=myColumns, digits=2, align='c')
-
-xtable(detSummary, align='c', digits=2)
-
-
-include_graphics('./Report/detectionPlot.jpeg')
-# detectionPlotCombined
+knitr::include_graphics('./Report/detSumTable.png')
+knitr::include_graphics('./Report/stationPlot.jpeg')
+knitr::include_graphics('./Report/detectionPlotCombined.jpeg')
+knitr::include_graphics('./Report/detectionPlot.jpeg')
 ```
