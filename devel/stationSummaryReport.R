@@ -4,28 +4,35 @@ library(knitr)
 library(kableExtra)
 library(ggplot2)
 library(PAMsbuoy)
+library(webshot)
 stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary', outdir='Report', format='word') {
-  if(!dir.exists(outdir)) {
-    dir.create(outdir)
+  reportDirs <- paste0(outdir, c('', '/Tables', '/Figures'))
+  for(dir in reportDirs[which(!dir.exists(reportDirs))]) {
+    dir.create(dir)
   }
   detSummary <- detectionSummary(stationList)
   myMap <- getMap(detSummary)
   stationPlot <- mapStations(stationList, map=myMap)
+  stationPlotTitle <- stationPlot + labs(title='Figure 1: Caption style 1')
   detectionPlotCombined <- mapDetections(detSummary, map=myMap, value='NumDetections')
   detectionPlot <- mapDetections(detSummary, combine=FALSE, map=myMap, value='NumDetections')
 
-  ggsave(filename='stationPlot.jpeg', plot=stationPlot, path=outdir,
+  unlink(list.files(paste0(outdir, '/Figures'), full.names=TRUE))
+
+  ggsave(filename='stationPlot.jpeg', plot=stationPlot, path=paste0(outdir, '/Figures'),
          width=4, height=3, units='in', scale=1)
-  ggsave(filename='detectionPlotCombined.jpeg', plot=detectionPlotCombined, path=outdir,
+  ggsave(filename='detectionPlotCombined.jpeg', plot=detectionPlotCombined, path=paste0(outdir, '/Figures'),
          width=4*.8, height=3*.8, units='in', scale=2)
-  ggsave(filename='detectionPlot.jpeg', plot=detectionPlot, path=outdir,
+  ggsave(filename='detectionPlot.jpeg', plot=detectionPlot, path=paste0(outdir, '/Figures'),
          width=8*.8, height=4*.8, units='in', scale=1.5)
 
-  tempRows <- 57
+  tempRows <- 10
   detSummary <- head(detSummary, tempRows)
 
+  unlink(list.files(paste0(outdir, '/Tables'), full.names=TRUE))
+
   htmlTableToImage(makeHtmlTable(detSummary, caption='Table 1: This is where my name goes'), tableRows = nrow(detSummary),
-                   outdir=paste0(outdir, '/Tables'), filename = 'detectionSummaryTable',maxRows = 10)
+                   outdir=paste0(outdir, '/Tables'), filename = 'detectionSummaryTable',maxRows = 3)
 
   switch(format,
          html = {

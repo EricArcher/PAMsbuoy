@@ -13,13 +13,26 @@ output:
 detSumTables <- list.files('./Report/Tables', pattern='detectionSummaryTable', full.names=TRUE)
 for(tbl in detSumTables) {
   # print(tbl)
-  cat("![Oh hell no](",tbl,")")
+  cat("![](",tbl,")")
 }
 ```
 
 
 ```{r echo=FALSE}
-include_graphics('./Report/stationPlot.jpeg')
-include_graphics('./Report/detectionPlotCombined.jpeg')
-include_graphics('./Report/detectionPlot.jpeg')
+stationPlotTitle
+```
+
+
+```{r echo=FALSE, fig.cap='Figure 2: Caption style 2'}
+include_graphics('./Report/Figures/stationPlot.jpeg')
+```
+
+
+```{r echo=FALSE}
+include_graphics('./Report/Figures/detectionPlotCombined.jpeg')
+```
+
+
+```{r echo=FALSE}
+include_graphics('./Report/Figures/detectionPlot.jpeg')
 ```
