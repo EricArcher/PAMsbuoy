@@ -1,0 +1,6 @@
+---
+output: html_fragment
+---
+```{r echo=FALSE}
+myTable
+```
