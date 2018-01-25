@@ -4,6 +4,7 @@ library(dplyr)
 library(viridisLite)
 library(plotly)
 library(gridExtra)
+library(swfscMisc)
 
 makeCircle <- function(start, center, distance, shape = 0, boatKnots = 10,
                        angles=seq(from=0, to=360, length.out=360)) {

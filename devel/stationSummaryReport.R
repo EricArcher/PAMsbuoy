@@ -19,6 +19,8 @@ stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary
 
   unlink(list.files(paste0(outdir, '/Figures'), full.names=TRUE))
 
+  ggsave(filename='stationPlotTitle.jpeg', plot=stationPlotTitle, path=paste0(outdir, '/Figures'),
+         width=4, height=3, units='in', scale=1)
   ggsave(filename='stationPlot.jpeg', plot=stationPlot, path=paste0(outdir, '/Figures'),
          width=4, height=3, units='in', scale=1)
   ggsave(filename='detectionPlotCombined.jpeg', plot=detectionPlotCombined, path=paste0(outdir, '/Figures'),
@@ -32,7 +34,7 @@ stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary
   unlink(list.files(paste0(outdir, '/Tables'), full.names=TRUE))
 
   htmlTableToImage(makeHtmlTable(detSummary, caption='Table 1: This is where my name goes'), tableRows = nrow(detSummary),
-                   outdir=paste0(outdir, '/Tables'), filename = 'detectionSummaryTable',maxRows = 3)
+                   outdir=paste0(outdir, '/Tables'), filename = 'detectionSummaryTable',maxRows = 5)
 
   switch(format,
          html = {
@@ -50,6 +52,7 @@ stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary
 htmlTableToImage <- function(inTable, tableRows, headerHeight=94, rowHeight=37,
                              outdir='Report', filename='table',  maxRows=30) {
   # Height 59 if no cap, 94 if cap
+  # Off by a pixel
   if(is.null(webshot:::find_phantom())) {
     webshot::install_phantomjs()
   }

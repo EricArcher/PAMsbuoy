@@ -44,11 +44,12 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
   end <- swfscMisc::destination(start$Latitude, start$Longitude, drift$bearing,
                                 drift$rate*difftime(boat$UTC[nrow(boat)], start$UTC, units='secs')/3600,
                                 units='km')
-  boatPlot <- ggplot() + geom_point(data=boat, aes(x=BoatLongitude, y=BoatLatitude, color='Boat')) +
-    geom_point(data=buoy, aes(x=Longitude, y=Latitude, color='Buoy')) +
-    geom_segment(aes(x=start$Longitude, xend=end[2], y=start$Latitude, yend=end[1], color='Drift'),
+  boatPlot <- ggplot() + geom_point(data=boat, aes(x=BoatLongitude, y=BoatLatitude, color='Boat Path')) +
+    geom_point(data=buoy, aes(x=Longitude, y=Latitude, color='Buoy Path')) +
+    geom_segment(aes(x=start$Longitude, xend=end[2], y=start$Latitude, yend=end[1], color='Drift Estimate'),
                  size=6, alpha=.4) +
-    labs(title=paste0('Angle error: ', angleError, '. Bias: ', angleBias))
+    labs(title=paste0('Angle Error: ', angleError, '. Angle Bias: ', angleBias),
+         x='Longitude', y='Latitude')
   if(like) {
     # browser()
     driftLike <- likeDf(nAngles=numGrid, nRates=numGrid, boat=boat, start=start, sd=modelSd) %>%
@@ -103,12 +104,12 @@ testit(testDat, start, realRate, realBearing, plot=T, like=FALSE, debug=FALSE, n
        angleError=10, angleBias=7, modelSd=10)
 
 testDat <- makeLines(start=start, distances=c(1.2,1.2), boatKnots=10, angle=90, turn=160, nPoints=20)
-testit(testDat, start, realRate, realBearing, plot=TRUE, like=TRUE, debug=F, numInit = 12, numGrid=50,
+testit(testDat, start, realRate, realBearing, plot=TRUE, like=F, debug=F, numInit = 12, numGrid=50,
        angleError=5, angleBias=0, modelSd=10)
 
-driftSims <- do.call(rbind, lapply(1:500, function(x) {
+driftSims <- do.call(rbind, lapply(1:200, function(x) {
   drift <- testit(testDat, start, realRate, realBearing, plot=F, like=FALSE, debug=FALSE, numInit = 12, numGrid=30,
-         angleError=10, angleBias=7, modelSd=10)
+         angleError=10, angleBias=0, modelSd=10)
   data.frame(Rate=drift$rate, Bearing = drift$bearing)
 }))
 

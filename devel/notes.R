@@ -67,3 +67,45 @@
 #
 # Create small report on drift stuff for Shannon showing results of simulations
 
+###### POTENTIAL PROBLEM####
+# NO INTERNET MEANS NO MAPS ####
+# Change getMap - first suppress warning messages when it cant download, then after it fails
+# however many times have it spit out some blank bullshit to plot on
+
+
+# Report Notes:
+# Try assuming it's in own page, then limit size. Need to do about 3/4 page size so there is
+# lots of room for table header
+# Captions: have both for figures, none for tables.
+# Table bottom is cutoff - add pixels to end
+
+# Ask for survey full text name for first [Cruise Name], then also short-hand for later in report.
+# then question For 1705_whatver, what is the vessel name
+
+# PG version: lookup in table (later once it's added), if can't be found then ask. Probably
+# create an info part of station (like buoy, det) to store this.
+
+# For now no recording length. Need to figure out better way.
+
+# In future connect difar species to lookup table. For now we can say: I found these species, what are
+# their names.
+
+# Table info: want also number of calls only heard on 1 buoy?
+# Collapsing will break if only 1 species or other shit
+
+# Paste pictures and tables into google docs so we can adjust text around it
+
+# Offline maps - ask Eric. Problem - my zooming relies on google bounds. Could have people
+# download some coastfiles or whatever before going out to sea.
+
+#### Drift sim pictures
+# Some examples good and bad - bad error, fewer points
+# Thoughts on drift - it isn't as important to say "is this better" for 1 buoy,
+# we need the relative positions for our secr shit
+
+#####
+# Burstpulseshenanigans
+#####
+# WM detector in PG. Some for actualy whistles, some for BPs. Need to have analytical
+# and detailed method for making one that is good for BP vs WM. High and low BPs
+

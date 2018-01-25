@@ -130,4 +130,10 @@ tbl <- kable(detTest,  align='c', digits=2,
   row_spec(odds, background='#edf0f4') %>%
   collapse_rows(which(colnames(detSummary) %in% c('KSpecies','Station')))
 
-remDr <- remoteDriver(port=4445L)
+# table rows 37px, top 59px
+if(is.null(webshot:::find_phantom())) {
+  webshot::install_phantomjs()
+}
+tmp <- tempfile('tempTable', fileext='.html')
+rmarkdown::render('tableTemplate.Rmd', tmp, output_format = 'html_document', quiet=TRUE)
+webshot(tmp, file='table1.png')
