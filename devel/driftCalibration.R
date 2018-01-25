@@ -54,12 +54,12 @@ expectedBearing <- function(boat, start, drift.rate, drift.phi) {
   swfscMisc::bearing(buoyLoc[,1], buoyLoc[,2], boat$BoatLatitude, boat$BoatLongitude)[1:nrow(boat)]
 }
 
-likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start) {
+likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start, sd=10) {
   angles <- seq(0,360, length.out=nAngles)
   rates <- seq(0, 3, length.out=nRates)
   do.call(rbind, lapply(rates, function(r) {
     value <- sapply(angles, function(a) {
-      driftLogl(boat, start, c(r,a))
+      driftLogl(boat, start, c(r,a), sd)
     })
     data.frame(Rate=r, Angle=angles, Value=value)
   }))
