@@ -9,13 +9,14 @@
 #' @param crop flag whether or not to automatically crop the map to range of your data
 #' @param map Optional, a ggmap object to plot on. If left as NULL, will be created automatically
 #'   by the getMap function. Can be included to reduce calls to getMap.
+#' @param title a title for the plot
 #'
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
 #' @import ggplot2
 #' @export
 #'
-mapStations <- function(stationList, zoom='auto', crop=FALSE, map=NULL) {
+mapStations <- function(stationList, zoom='auto', crop=FALSE, map=NULL, title='Sonobuoy Stations') {
   buoyPositions <- do.call(rbind, lapply(stationList, function(s) {
     do.call(rbind, lapply(s$buoys, function(b) {
       buoyDat <- b$position[1,]
@@ -40,7 +41,7 @@ mapStations <- function(stationList, zoom='auto', crop=FALSE, map=NULL) {
   # Colorblind palette. Just in case adding color by factor later.
   cbPalette <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
   g <- map + geom_point(data=buoyPositions, aes(x=Longitude, y=Latitude, color='Station'), size=3) +
-    labs(x='Longitude', y='Latitude', title='Sonobuoy Stations', color='') +
+    labs(x='Longitude', y='Latitude', title=title, color='') +
     scale_color_manual(values=cbPalette) +
     theme(plot.title = element_text(hjust=.5))
 
