@@ -4,10 +4,6 @@
 # no calibrations. Everything like applyCalibration, driftShit, should be taking
 # the formatStation output as their input and then doin shizz.
 
-# Table with Station #, lat/long, time, recording length, # species breakdown,
-# some kind of estimate of buoy angle error, drift calibration if we did it
-# DONT KNOW RECORDING LENGTH
-
 # For plotting of a station we want to be able to show localizations and possibly
 # the location of the ship
 

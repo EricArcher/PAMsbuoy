@@ -27,19 +27,22 @@ makeCircle <- function(start, center, distance, shape = 0, boatKnots = 10,
 }
 
 makeLines <- function(start, distances, boatKnots, angle, turn=135, nPoints) {
-  dist1 <- seq(distances[1]/nPoints, distances[1], length.out=nPoints)
+  if(length(nPoints)==1) {
+    nPoints <- rep(nPoints,2)
+  }
+  dist1 <- seq(distances[1]/nPoints[1], distances[1], length.out=nPoints[1])
   points1 <- do.call(rbind, lapply(dist1, function(d) {
     swfscMisc::destination(start$Latitude, start$Longitude, angle, d, units='km')
   }))
   points1 <- data.frame(BoatLatitude=points1[,1], BoatLongitude=points1[,2],
                         UTC=dist1/boatKnots/1.85*3600+start$UTC)
-  dist2 <- seq(distances[2]/nPoints, distances[2], length.out=nPoints)
+  dist2 <- seq(distances[2]/nPoints[2], distances[2], length.out=nPoints[2])
   points2 <- do.call(rbind, lapply(dist2, function(d) {
-    swfscMisc::destination(points1$BoatLatitude[nPoints], points1$BoatLongitude[nPoints],
+    swfscMisc::destination(points1$BoatLatitude[nPoints[1]], points1$BoatLongitude[nPoints[1]],
                            angle+turn, d, units='km')
   }))
   points2 <- data.frame(BoatLatitude=points2[,1], BoatLongitude=points2[,2],
-                        UTC=points1$UTC[nPoints] + dist2/boatKnots/1.85*3600)
+                        UTC=points1$UTC[nPoints[1]] + dist2/boatKnots/1.85*3600)
   distinct(rbind(points1, points2))
 }
 

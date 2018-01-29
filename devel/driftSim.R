@@ -41,7 +41,7 @@ testDat <- makeCircle(start=start, center=start, distance=1.5, angles=seq(from=1
 testit(testDat, start, realRate, realBearing, plot=T, like=FALSE, debug=FALSE, numInit = 12, numGrid=30,
        angleError=10, angleBias=7, modelSd=10)
 
-testDat <- makeLines(start=start, distances=c(1,1), boatKnots=10, angle=90, turn=160, nPoints=10)
+testDat <- makeLines(start=start, distances=c(1,1), boatKnots=10, angle=90, turn=160, nPoints=c(1,10))
 testit(testDat, start, realRate, realBearing, plot=TRUE, like=F, debug=F, numInit = 12, numGrid=50,
        angleError=10, angleBias=0, modelSd=10)
 

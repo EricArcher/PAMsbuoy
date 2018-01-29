@@ -1,11 +1,13 @@
-19.5/29# Testing zone.
+# Testing zone.
 library(PAMsbuoy)
 library(dplyr)
 library(tools)
 library(ggplot2)
+source('../SonoBuoy/SonoBuoyFunctions.R')
+library(lubridate)
 db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB_S89S90s_P1.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment DIFAR - Circles.sqlite3')
-db <- loadDB('../SonoBuoy/Data/PAST_20160607_Edited.sqlite3') # no calibration only weird difar
+db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_PB_Edited.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
 db <- loadDB('../SonoBuoy/Data/HICEAS_2017/Sette/Database/1706_pg11511_sb_10_20170722.sqlite3')
 db <- loadDB('./devel/final db formatting/FinalFormat_Station2.sqlite3')
@@ -112,28 +114,55 @@ endPoint <- function(buoys, drift, endNum, buoyNum) {
              Time=c(startTime, endTime), Point=c('Start', 'End'))
 }
 
-detSummary %>% mutate(Ktest = paste0(Species,' [', Count,']')) %>% head()
-
-detTest <- detSummary %>%
-  mutate(StationNum = as.numeric(as.factor(Station)),
-         KSpecies=paste0(Species, ' <b>[', UniqueCount,']</b>'),
-         KBuoy=paste0(Buoy,' <b>[', Count,']</b>')) %>%
-  head(10)
-odds <- which(detTest$StationNum %% 2 == 1)
-detTest <- select(detTest, -StationNum) %>%
-  select(Station, KSpecies, KBuoy, Latitude, Longitude, UTC)
-myColumns <- c('Station', 'Species<br/>[Unique Detections]', 'Buoy<br/>[Detections]',
-               'Latitude', 'Longitude', 'UTC')
-tbl <- kable(detTest,  align='c', digits=2,
-      col.names=myColumns, escape=FALSE, format='html') %>%
-  kable_styling('bordered') %>%
-  row_spec(odds, background='#edf0f4') %>%
-  collapse_rows(which(colnames(detSummary) %in% c('KSpecies','Station')))
 
 # table rows 37px, top 59px
 if(is.null(webshot:::find_phantom())) {
   webshot::install_phantomjs()
 }
-tmp <- tempfile('tempTable', fileext='.html')
-rmarkdown::render('tableTemplate.Rmd', tmp, output_format = 'html_document', quiet=TRUE)
-webshot(tmp, file='table1.png')
+spots <- read.csv('../SonoBuoy/Data/spot_messages_RUST_JLK.csv') %>%
+  mutate(UTC = mdy_hm(datetime, tz='America/Los_Angeles'),
+         UTC = with_tz(UTC, tzone='UTC'),
+         Buoy = as.factor(sapply(PlotPoints, firstTrialId))) %>%
+  arrange(UTC) %>% select(UTC, Latitude, Longitude, Buoy) %>%
+  group_by(Buoy) %>% top_n(-2,UTC)
+
+db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
+difarTest <- formatStation(db, buoyPositions = spots)
+
+db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_PB_Edited.sqlite3')
+db$DIFAR_Localisation$Species <- 'vessel'
+difarTest <- formatStation(db, buoyPositions = spots)
+# db$HydrophoneStreamers$DifarModuleAction <- 'deployed'
+
+load('../SonoBuoy/difarData.Rds')
+colnames(finalDifar)
+
+firstStation <- formatStation(db, buoyPositions = spots)
+testStation <- firstStation
+testStation <- difarTest
+for(b in 1:4) {
+  testStation$buoys[[b]]$calibration <- testStation$buoys[[b]]$calibration %>%
+    rename(OldDF = DIFARBearing, DIFARBearing=true.bearing) %>% arrange(UTC) %>% head(10)
+
+}
+driftCalibrationBias(testStation$buoys)
+
+allDifar <- do.call(rbind, purrr::transpose(firstStation$buoys)$calibration) %>%
+  group_by(Buoy) %>% top_n(-1, UTC)
+
+
+spots %>% group_by(Buoy) %>% top_n(-2, UTC)
+firstDifar <- db$DIFAR_Localisation %>% group_by(Channel) %>%
+  top_n(-2, UTC) %>% select(UTC, Channel)
+
+ggplot() + geom_point(data=spots, aes(x=Longitude, y=Latitude, color=Buoy, shape='Buoy')) +
+  geom_point(data=allDifar, aes(x=BoatLongitude, y=BoatLatitude, color=Buoy, shape='Boat'))
+
+plist <- vector('list', 4)
+for(i in 1:4) {
+  graphme <- testStation$buoys[[i]]
+  plist[[i]] <- ggplot() +
+    geom_point(data=graphme$position[1,], aes(x=Longitude, y=Latitude, color='Buoy')) +
+    geom_point(data=graphme$calibration, aes(x=BoatLongitude, y=BoatLatitude, color='Boat'))
+}
+gridExtra::grid.arrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow=2)

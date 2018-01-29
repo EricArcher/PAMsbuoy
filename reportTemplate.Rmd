@@ -19,12 +19,6 @@ for(tbl in detSumTables) {
 
 
 ```{r echo=FALSE}
-kable(detSummary)
-```
-
-
-
-```{r echo=FALSE}
 include_graphics('./Report/Figures/stationPlotTitle.jpeg')
 ```
 

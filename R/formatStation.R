@@ -108,7 +108,7 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
       effort[b] <- list(NULL)
     }
     effort <- effort[order(names(effort))]
-    message("  no effort records for buoy(s) ", paste(missing.effort, collapse = ", "))
+    message("  no complete effort records for buoy(s) ", paste(missing.effort, collapse = ", "))
   }
 
   calibration <- calculateOffset(calibration, position, db)
@@ -251,6 +251,7 @@ formatBuoyEffort <- function(db) {
     ons <- which(b.eff$Status == "on effort")
     if(length(ons)==0) {
       message('  no "on effort" records for buoy ', b)
+      return(NULL)
     } else {
       if(min(ons) != 1) {
         message("  first effort record for buoy ", b, " is not 'on effort'")
@@ -278,6 +279,7 @@ formatBuoyEffort <- function(db) {
     offs <- which(b.eff$Status == 'off effort')
     if(length(offs)==0) {
       message('  no "off effort" records for buoy ', b)
+      return(NULL)
     } else {
       if(max(offs) != nrow(b.eff)) {
         message('  last effort record for buoy ', b, ' is not "off effort"')

@@ -12,17 +12,17 @@ stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary
   }
   detSummary <- detectionSummary(stationList)
   myMap <- getMap(detSummary)
-  stationPlot <- mapStations(stationList, map=myMap)
+  stationPlot <- mapStations(stationList, map=myMap, size=2)
   stationPlotTitle <- stationPlot + labs(title='Figure 1: Caption style 1')
-  detectionPlotCombined <- mapDetections(detSummary, map=myMap, value='NumDetections')
-  detectionPlot <- mapDetections(detSummary, combine=FALSE, map=myMap, value='NumDetections')
+  detectionPlotCombined <- mapDetections(detSummary, map=myMap, value='NumDetections', size=2)
+  detectionPlot <- mapDetections(detSummary, combine=FALSE, map=myMap, value='NumDetections', size=2)
 
   unlink(list.files(paste0(outdir, '/Figures'), full.names=TRUE))
 
   ggsave(filename='stationPlotTitle.jpeg', plot=stationPlotTitle, path=paste0(outdir, '/Figures'),
-         width=4, height=3, units='in', scale=1)
+         width=4, height=3, units='in', scale=2)
   ggsave(filename='stationPlot.jpeg', plot=stationPlot, path=paste0(outdir, '/Figures'),
-         width=4, height=3, units='in', scale=1)
+         width=4, height=3, units='in', scale=2)
   ggsave(filename='detectionPlotCombined.jpeg', plot=detectionPlotCombined, path=paste0(outdir, '/Figures'),
          width=4*.8, height=3*.8, units='in', scale=2)
   ggsave(filename='detectionPlot.jpeg', plot=detectionPlot, path=paste0(outdir, '/Figures'),
@@ -33,7 +33,7 @@ stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary
 
   unlink(list.files(paste0(outdir, '/Tables'), full.names=TRUE))
 
-  htmlTableToImage(makeHtmlTable(detSummary, caption='Table 1: This is where my name goes'), tableRows = nrow(detSummary),
+  htmlTableToImage(makeHtmlTable(detSummary), tableRows = nrow(detSummary),
                    outdir=paste0(outdir, '/Tables'), filename = 'detectionSummaryTable',maxRows = 5)
 
   switch(format,
@@ -49,7 +49,7 @@ stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary
                     output_dir = outdir,quiet=TRUE, output_format=outFormat)
 }
 
-htmlTableToImage <- function(inTable, tableRows, headerHeight=94, rowHeight=37,
+htmlTableToImage <- function(inTable, tableRows, headerHeight=59, rowHeight=37,
                              outdir='Report', filename='table',  maxRows=30) {
   # Height 59 if no cap, 94 if cap
   # Off by a pixel
@@ -65,6 +65,9 @@ htmlTableToImage <- function(inTable, tableRows, headerHeight=94, rowHeight=37,
     if(tbls==1) {
       top <- 0
       length <- min(maxRows, tableRows)*rowHeight + headerHeight
+    } else if(tbls==ceiling(tableRows/maxRows)) {
+      top <- headerHeight + rowHeight*maxRows*(tbls-1)
+      length <- min(maxRows, tableRows-maxRows*(tbls-1))*rowHeight + 1
     } else {
       top <- headerHeight + rowHeight*maxRows*(tbls-1)
       length <- min(maxRows, tableRows-maxRows*(tbls-1))*rowHeight
