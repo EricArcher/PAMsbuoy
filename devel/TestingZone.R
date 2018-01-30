@@ -5,6 +5,7 @@ library(tools)
 library(ggplot2)
 source('../SonoBuoy/SonoBuoyFunctions.R')
 library(lubridate)
+library(viridisLite)
 db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB_S89S90s_P1.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment DIFAR - Circles.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_PB_Edited.sqlite3')
@@ -126,6 +127,12 @@ spots <- read.csv('../SonoBuoy/Data/spot_messages_RUST_JLK.csv') %>%
   arrange(UTC) %>% select(UTC, Latitude, Longitude, Buoy) %>%
   group_by(Buoy) %>% top_n(-2,UTC)
 
+spotsAll <- read.csv('../SonoBuoy/Data/spot_messages_RUST_JLK.csv') %>%
+  mutate(UTC = mdy_hm(datetime, tz='America/Los_Angeles'),
+         UTC = with_tz(UTC, tzone='UTC'),
+         Buoy = as.factor(sapply(PlotPoints, firstTrialId))) %>%
+  arrange(UTC) %>% select(UTC, Latitude, Longitude, Buoy)
+
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
 difarTest <- formatStation(db, buoyPositions = spots)
 
@@ -136,17 +143,62 @@ difarTest <- formatStation(db, buoyPositions = spots)
 
 load('../SonoBuoy/difarData.Rds')
 colnames(finalDifar)
+finalDifar <- finalDifar %>%
+  select(Buoy=Channel, BoatLatitude=BoatLat, BoatLongitude=BoatLong, UTC,
+         BuoyLatitude, BuoyLongitude, DIFARBearing, Species, RealBearing, Distance) %>%
+  mutate(UTC=ymd_hms(UTC)) %>%
+  rename(OldDifar = DIFARBearing, DIFARBearing=RealBearing)
 
 firstStation <- formatStation(db, buoyPositions = spots)
 testStation <- firstStation
-testStation <- difarTest
+
 for(b in 1:4) {
-  testStation$buoys[[b]]$calibration <- testStation$buoys[[b]]$calibration %>%
-    rename(OldDF = DIFARBearing, DIFARBearing=true.bearing) %>% arrange(UTC) %>% head(10)
+  testStation$buoys[[b]]$calibration <- finalDifar %>% filter(Buoy==b-1)
 
 }
-driftCalibrationBias(testStation$buoys)
+# Add some bias
+testStation$buoys$`3`$calibration$DIFARBearing <- testStation$buoys$`3`$calibration$DIFARBearing +
+  rnorm(nrow(testStation$buoys$`3`$calibration), 10, 10)
 
+# Drifts - manually changed above and re-ran
+driftsActualDifar <- driftCalibrationBias(testStation$buoys, inits=c(10,10,10))
+driftsActualNoBias <- driftCalibration(testStation$buoys)
+driftsReal <- driftCalibrationBias(testStation$buoys, inits=c(10,10,10))
+driftsRealNoBias <- driftCalibration(testStation$buoys)
+
+# Combine to DF
+ds <- list(driftsActualDifar, driftsActualNoBias, driftsReal, driftsRealNoBias)
+names(ds) <- c('Difar', 'DifarNoBias', 'Real', 'RealNoBias')
+ddata <- do.call(rbind, lapply(names(ds), function(st) {
+  tmp <- purrr::transpose(ds[[st]])
+  bias <- if('bias' %in% names(tmp)) {
+    unlist(tmp$bias)
+  } else 0
+  data.frame(Rate=unlist(tmp$rate), Angle=unlist(tmp$bearing), Buoy=0:3, Bias=bias, Type=st)
+}))
+ddata$Buoy <- as.character(ddata$Buoy)
+# Add start
+ddata$Latitude <- 0; ddata$Longitude <- 0; ddata$UTC <- ymd_hms('2017-04-04 04:04:04')
+ddata$EndUTC <- ddata$UTC
+for(i in 1:nrow(ddata)) {
+  pos <- purrr::transpose(testStation$buoys)$position[[ddata$Buoy[i]]] %>% data.frame()
+  cal <- purrr::transpose(testStation$buoys)$calibration[[ddata$Buoy[i]]] %>%
+    data.frame() %>% arrange(desc(UTC))
+  ddata$Latitude[i] <- pos[1, 'Latitude']
+  ddata$Longitude[i] <- pos[1, 'Longitude']
+  ddata$UTC[i] <- pos[1, 'UTC']
+  ddata$EndUTC[i] <- cal[1, 'UTC']
+}
+endPoints <- mapply(swfscMisc::destination, ddata$Latitude, ddata$Longitude, ddata$Angle,
+                                    ddata$Rate*difftime(ddata$EndUTC, ddata$UTC, units='secs')/3600,
+                                    units='km')
+
+ddata$EndLat <- endPoints[1,]; ddata$EndLong <- endPoints[2,]
+# Plot daaaa drifts
+ggplot() + geom_segment(data=ddata, aes(x=Longitude, y=Latitude, xend=EndLong, yend=EndLat, color=Type), size=3, alpha=.5) +
+  geom_point(data=finalDifar, aes(x=BuoyLongitude, y=BuoyLatitude, shape=as.character(Buoy)), size=2)
+
+#######################################
 allDifar <- do.call(rbind, purrr::transpose(firstStation$buoys)$calibration) %>%
   group_by(Buoy) %>% top_n(-1, UTC)
 
@@ -166,3 +218,31 @@ for(i in 1:4) {
     geom_point(data=graphme$calibration, aes(x=BoatLongitude, y=BoatLatitude, color='Boat'))
 }
 gridExtra::grid.arrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow=2)
+
+x<-1:3; y<-4:6; z<-10:11
+system.time(
+  test <- do.call(rbind, lapply(x, function(a) {
+    tdf <- do.call(rbind, lapply(y, function(b) {
+      val <- sapply(z, function(c) {
+        a+b+c
+      })
+      data.frame(ys=b, zs=z,sum=val)
+    }))
+    tdf$xs <- a
+    select(tdf, xs, ys, zs, sum)
+  }))
+)
+system.time({
+  size <- length(x)*length(y)
+  result <- data.frame(xs=vector('numeric', length=size),
+                       ys=vector('numeric', length=size),
+                       val=vector('numeric', length=size))
+  i <- 1
+  for(a in x) {
+    for(b in y) {
+      d <- a+b
+      result[i,] <- c(a, b, d)
+      i <- i+1
+    }
+  }
+})

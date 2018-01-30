@@ -105,3 +105,11 @@
 # WM detector in PG. Some for actualy whistles, some for BPs. Need to have analytical
 # and detailed method for making one that is good for BP vs WM. High and low BPs
 
+####
+# Eric Qs
+# Offline mapping
+# Drift shenanigans confidence measure
+
+###
+# Drift problems
+# Angle error is a worse problem when you are further away

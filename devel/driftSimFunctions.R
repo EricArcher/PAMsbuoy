@@ -66,6 +66,8 @@ simDiagnostic <- function(start, driftData, rate, bearing, time=60*10) {
     geom_vline(xintercept=rate, size=2, color='green') + xlim(0,3.2)
   bearingHist <- ggplot(driftData, aes(x=Bearing)) + geom_histogram(binwidth=2) +
     geom_vline(xintercept=bearing, size=2, color='green') + xlim(0,360)
+  rateErrHist <- ggplot(driftData, aes(x=RateErr)) + geom_histogram(binwidth=.002) + xlim(0,.3)
+  bearingErrHist <- ggplot(driftData, aes(x=BearingErr)) + geom_histogram(binwidth=.25) + xlim(0,40)
   endings <- mapply(destination, start$Latitude, start$Longitude, driftData$Bearing,
                     driftData$Rate*time/3600, units='km')
   realEnd <- destination(start$Latitude, start$Longitude, bearing, rate*time/3600, units='km')
@@ -77,7 +79,7 @@ simDiagnostic <- function(start, driftData, rate, bearing, time=60*10) {
   driftPlot <- ggplot(endDf) +
     geom_segment(aes(x=start$Longitude, y=start$Latitude, xend=Longitude, yend=Latitude), color='blue', alpha=.2) +
     geom_segment(x=start$Longitude, y=start$Latitude, xend=realEnd[2], yend=realEnd[1], color='green', size=3)
-  grid.arrange(rateHist, bearingHist, distHist, driftPlot, nrow=2)
+  grid.arrange(rateHist, bearingHist, distHist, driftPlot, rateErrHist, bearingErrHist, nrow=2)
 }
 
 likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start, sd=10) {
@@ -91,18 +93,20 @@ likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start, sd=10) {
   }))
 }
 testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FALSE,
-                   numInit=5, numGrid=60, angleError=0, angleBias=0, modelSd = 10) {
+                   numInit=5, numGrid=60, angleError=0, angleBias=0, modelSd = 10, map=FALSE) {
   buoy <- driftBuoy(start, rate, bearing, times=boat$UTC)
   boat <- makeDifar(boat, buoy) %>% mutate(DIFARBearing = DIFARBearing + rnorm(nrow(boat), angleBias, angleError))
   initDrift <- likeDf(nAngles=numInit, nRates=numInit, boat=boat, start=start) %>%
     arrange(desc(Value))
-  drift <- driftCalibration(list(position=start, calibration=boat),
+  drift <- driftCalibration(list(position=start, calibration=boat), sd=modelSd,
                             initial=c(initDrift$Rate[1], initDrift$Angle[1]))[[1]]
   endPoints <- swfscMisc::destination(start$Latitude, start$Longitude, drift$bearing,
                                 drift$rate*difftime(boat$UTC[nrow(boat)], start$UTC, units='secs')/3600,
                                 units='km')
   start$endLat <- endPoints[1]; start$endLong <- endPoints[2]
-  boatMap <- getMap(rename(boat, Latitude=BoatLatitude, Longitude=BoatLongitude), zoom=16)
+  if(map) {
+    boatMap <- getMap(rename(boat, Latitude=BoatLatitude, Longitude=BoatLongitude), zoom=16)
+  } else boatMap <- ggplot()
   # boatPlot <-ggplot() +
   boatPlot <- boatMap +
     geom_point(data=boat, aes(x=BoatLongitude, y=BoatLatitude, color='Boat Path')) +
@@ -119,6 +123,10 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
     debugPoints <- data.frame(Angle = c(initDrift$Angle[1], drift$bearing[1], driftLike$Angle[1], bearing),
                               Rate = c(initDrift$Rate[1], drift$rate[1], driftLike$Rate[1], rate),
                               Name = c('Initial', 'Drift Estimate', 'Grid Estimate', 'Actual'))
+    errPoints <- data.frame(StartRate=c(drift$rate[1]-drift$err[1], drift$rate[1]-2*drift$err[1], rep(drift$rate[1], 2)),
+                            StartAngle=c(rep(drift$bearing[1], 2), drift$bearing[1]-drift$err[2], drift$bearing[1]-2*drift$err[2]),
+                            EndRate=c(drift$rate[1]+drift$err[1], drift$rate[1]+2*drift$err[1], rep(drift$rate[1], 2)),
+                            EndAngle=c(rep(drift$bearing[1], 2), drift$bearing[1]+drift$err[2], drift$bearing[1]+2*drift$err[2]))
     contours <- sapply(c(.5,1:3), function(x) log(dnorm(x*modelSd, 0, modelSd)))
     likePlot <- ggplot() + geom_tile(data=driftLike, aes(x=Angle, y=Rate, fill=Value)) +
       scale_fill_gradientn(colors=viridis(256)) +
@@ -131,7 +139,8 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
                    breaks=contours[3], color='darkgreen', size=2) +
       geom_contour(data=driftLike, aes(x=Angle, y=Rate, z=Value),
                    breaks=contours[4], color='red', size=2) +
-      geom_point(data=debugPoints, aes(x=Angle, y=Rate, color=Name), size=3)
+      geom_point(data=debugPoints, aes(x=Angle, y=Rate, color=Name), size=3) +
+      geom_segment(data=errPoints, aes(x=StartAngle, y=StartRate, xend=EndAngle, yend=EndRate), size=rep(2:1,2), alpha=.5)
     drift$Like <- head(driftLike)
     drift$Contours <- contours
   }
@@ -162,7 +171,7 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
 }
 
 ##################### BIASED VERSION ########################
-driftCalibrationBias <- function(buoy.data, graph=FALSE, initial=c(1, 0, 0), ...) {
+driftCalibrationBias <- function(buoy.data, graph=FALSE, initial=c(1, 0, 0), nGrids=c(20,10,10), inits=c(5,5,5), test=TRUE, sd=10, ...) {
   # Check if it is just one buoy of a station, instead of the list of all buoys
   if('position' %in% names(buoy.data)) {
     buoy.data <- list(buoy.data)
@@ -171,24 +180,31 @@ driftCalibrationBias <- function(buoy.data, graph=FALSE, initial=c(1, 0, 0), ...
   lapply(buoy.data, function(buoy) {
     start <- buoy$position[1,]
     if(graph) {
-      driftDf <- likeDf(nAngles=30,nRates=30, boat=boatLines, start=start) %>%
+      driftDf <- likeDfBias(nAngles=nGrids[1],nRates=nGrids[2], nBias=nGrids[3], boat=buoy$calibration, start=start, sd=sd) %>%
         arrange(desc(Value))
-      ggplot(driftDf, aes(x=Angle, y=Rate, color=log(-Value))) + geom_point(size=8) +
-        scale_color_gradientn(colors=viridis(256, direction=-1, option='magma'))
-
+      graph <- ggplot(driftDf, aes(x=Angle, y=Rate, fill=log(-Value))) + geom_tile() +
+        scale_fill_gradientn(colors=viridis(256, direction=-1, option='magma'))
+      list(rate=driftDf$Rate[1], bearing = driftDf$Angle[1], bias=driftDf$Bias[1], graph=graph)
     } else {
-      drift <- optim(par=initial, driftLoglBias, boat=buoy$calibration, start=start,
+      initDrift <-likeDfBias(nAngles=inits[1], nRates=inits[2], nBias=inits[3], boat=buoy$calibration, start=start, sd=sd) %>%
+        arrange(desc(Value))
+      if(test) {
+        initVals <- c(initDrift$Rate[1], initDrift$Angle[1], initDrift$Bias[1])
+      } else {
+        initVals <- initial
+      }
+      drift <- optim(par=initVals, driftLoglBias, boat=buoy$calibration, start=start, sd=sd,
                      control=list('fnscale'=-1, maxit=10000, parscale=c(30,1, 5)),
                      hessian=TRUE, method='L-BFGS-B', lower=c(0, 0, -20), upper=c(3, 360, 20))
+      list(rate=drift$par[1], bearing=drift$par[2], bias=drift$par[3], err=sqrt(diag(solve(-drift$hessian))))
     }
-    list(rate=drift$par[1], bearing=drift$par[2], bias=drift$par[3], hessian=drift$hessian)
   })
 }
 
 driftLoglBias <- function(boat, start, drift, sd=4) {
   # Drift is rate, bearing , bias
   expected <- expectedBearing(boat, start, drift[1], drift[2])
-  error <- sapply((boat$DIFARBearing - expected - drift[3]) %% 360, function(x) {
+  error <- sapply((boat$DIFARBearing - drift[3] - expected) %% 360, function(x) {
     if(x < abs(x-360)) {x}
     else {x-360}
   }
@@ -196,13 +212,27 @@ driftLoglBias <- function(boat, start, drift, sd=4) {
   -1*(nrow(boat)/2)*log(2*pi*(sd^2)) - (1/2/(sd^2))*sum((error)^2)
 }
 
+likeDfBias <- function(nAngles=30, nRates=10, nBias=20, FUN=driftLoglBias, boat, start, sd=10) {
+  angles <- seq(0,360, length.out=nAngles)
+  rates <- seq(0, 3, length.out=nRates)
+  bias <- seq(-10, 10, length.out=nBias)
+  do.call(rbind, lapply(rates, function(r) {
+    tempdf <- do.call(rbind, lapply(angles, function(a) {
+      value <- sapply(bias, function(b) {
+        FUN(boat, start, c(r,a,b),sd)
+      })
+      data.frame(Angle=a, Bias=bias, Value=value)
+    }))
+    tempdf$Rate <- r
+    select(tempdf, Rate, Angle, Bias, Value)
+  }))
+}
+
 testitbias <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FALSE,
                    numInit=5, numGrid=60, angleError=0, angleBias=0, modelSd = 10) {
   buoy <- driftBuoy(start, rate, bearing, times=boat$UTC)
   boat <- makeDifar(boat, buoy) %>% mutate(DIFARBearing = DIFARBearing + rnorm(nrow(boat), angleBias, angleError))
-  # initDrift <- likeDf(nAngles=numInit, nRates=numInit, boat=boat, start=start) %>%
-  #   arrange(desc(Value))
-  drift <- driftCalibrationBias(list(position=start, calibration=boat), initial = c(1,100,0))[[1]]
+  drift <- driftCalibrationBias(list(position=start, calibration=boat), inits=c(5,5,5), sd=modelSd)[[1]]
   endPoints <- swfscMisc::destination(start$Latitude, start$Longitude, drift$bearing,
                                 drift$rate*difftime(boat$UTC[nrow(boat)], start$UTC, units='secs')/3600,
                                 units='km')

@@ -11,7 +11,7 @@
 #'
 #' @export
 #'
-driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0), ...) {
+driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0), sd=10, ...) {
   # Check if it is just one buoy of a station, instead of the list of all buoys
   if('position' %in% names(buoy.data)) {
     buoy.data <- list(buoy.data)
@@ -20,17 +20,21 @@ driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0), ...) {
   lapply(buoy.data, function(buoy) {
     start <- buoy$position[1,]
     if(graph) {
-      driftDf <- likeDf(nAngles=30,nRates=30, boat=boatLines, start=start) %>%
+      driftDf <- likeDf(nAngles=30,nRates=30, boat=buoy$calibration, start=start, sd=sd) %>%
         arrange(desc(Value))
-      ggplot(driftDf, aes(x=Angle, y=Rate, color=log(-Value))) + geom_point(size=8) +
-        scale_color_gradientn(colors=viridis(256, direction=-1, option='magma'))
+      graph <- ggplot(driftDf, aes(x=Angle, y=Rate, fill=log(-Value))) + geom_tile() +
+        scale_fill_gradientn(colors=viridis(256, direction=-1, option='magma'))
+      list(rate=driftDf$Rate[1], bearing=driftDf$Angle[1], graph=graph)
 
     } else {
-      drift <- optim(par=initial, driftLogl, boat=buoy$calibration, start=start,
+      initDrift <- likeDf(nAngles=10, nRates=10, boat=buoy$calibration, start=start, sd=sd) %>%
+        arrange(desc(Value))
+      initial=c(initDrift$Rate[1], initDrift$Angle[1])
+      drift <- optim(par=initial, driftLogl, boat=buoy$calibration, start=start, sd=sd,
                      control=list('fnscale'=-1, maxit=10000, parscale=c(30,1)),
                      hessian=TRUE, method='L-BFGS-B', lower=c(0, 0), upper=c(3, 360))
+      list(rate=drift$par[1], bearing=drift$par[2], err=sqrt(diag(solve(-drift$hessian))))
     }
-    list(rate=drift$par[1], bearing=drift$par[2], hessian=drift$hessian)
   })
 }
 

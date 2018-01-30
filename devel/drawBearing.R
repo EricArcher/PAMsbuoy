@@ -23,7 +23,7 @@
 #' @importFrom ggplot2 geom_segment
 #' @export
 #'
-drawBearings <- function(df, map=NULL, bearing = 'DIFARBearing', distance=1, ...) {
+drawBearings <- function(df, map=NULL, bearing = 'DIFARBearing', distance=1, pick=FALSE, ...) {
   data <- df  # Doing this because geom_ was getting angry using data=df, may try to fix later
   endcoord <- t(mapply(swfscMisc::destination, data$Latitude, data$Longitude,
                        data[[bearing]], distance, units='km'))
@@ -38,11 +38,16 @@ drawBearings <- function(df, map=NULL, bearing = 'DIFARBearing', distance=1, ...
   }
   map <- ggplot() + xlim(min(c(data$Longitude, data$endlong)), max(c(data$Longitude, data$endlong))) +
     ylim(min(c(data$Latitude, data$endlat)), max(c(data$Latitude, data$endlat)))
-  manipulate({
+  if(pick) {
+    manipulate({
+      map + geom_point(data=data, aes_string(x='Longitude', y='Latitude', color='Buoy'), size=3) +
+        geom_segment(data=data[data$detection %in% detPicker,],
+                     aes_string(x='Longitude', y='Latitude', xend='endlong', yend='endlat', ...),
+                     arrow=arrow(length=unit(.3, 'cm'), type='closed'))},
+      detPicker = picker(as.list(unique(data$detection))))
+  } else {
     map + geom_point(data=data, aes_string(x='Longitude', y='Latitude', color='Buoy'), size=3) +
-      geom_segment(data=data[data$detection %in% detPicker,], aes_string(x='Longitude', y='Latitude',
-                                                                         xend='endlong', yend='endlat', ...),
-                   arrow=arrow(length=unit(.3, 'cm'), type='closed'))},
-    detPicker = picker(as.list(unique(data$detection))))
-
+      geom_segment(data=data, aes_string(x='Longitude', y='Latitude', xend='endlong', yend='endlat', ...),
+                   arrow=arrow(length=unit(.3, 'cm'), type='closed'))
+  }
 }

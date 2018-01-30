@@ -4,7 +4,8 @@
 \alias{mapStations}
 \title{Create a Summary Map of All Sonobuoy Stations}
 \usage{
-mapStations(stationList, zoom = "auto", crop = FALSE, map = NULL)
+mapStations(stationList, zoom = "auto", crop = FALSE, map = NULL,
+  title = "Sonobuoy Stations", size = 3)
 }
 \arguments{
 \item{stationList}{list of sonobuoy stations returned by loadStations}
@@ -17,6 +18,10 @@ level to be used.}
 
 \item{map}{Optional, a ggmap object to plot on. If left as NULL, will be created automatically
 by the getMap function. Can be included to reduce calls to getMap.}
+
+\item{title}{a title for the plot}
+
+\item{size}{size of points for graph}
 }
 \description{
 Return a ggmap object showing all sonobuoy stations.

@@ -77,7 +77,7 @@ htmlTableToImage <- function(inTable, tableRows, headerHeight=59, rowHeight=37,
   unlink(tmp)
 }
 
-makeHtmlTable <- function(summaryData, caption=NULL) {
+makeHtmlTable <- function(summaryData) {
   detSummary <- summaryData %>%
     mutate(StationNum = as.numeric(as.factor(Station)),
            KSpecies=paste0(Species, ' <b>[', UniqueDetections,']</b>'),
@@ -87,7 +87,7 @@ makeHtmlTable <- function(summaryData, caption=NULL) {
     select(Station, KSpecies, KBuoy, Latitude, Longitude, UTC)
   myColumns <- c('Station', 'Species<br/>[Unique Detections]', 'Buoy<br/>[Detections]',
                  'Latitude', 'Longitude', 'UTC')
-  kable(detSummary,  align='c', digits=2, caption=caption,
+  kable(detSummary,  align='c', digits=2,
         col.names=myColumns, escape=FALSE, format='html') %>%
     kable_styling('bordered') %>%
     row_spec(odds, background='#edf0f4') %>%

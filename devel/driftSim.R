@@ -35,20 +35,26 @@ driftCalibration(list(position=start, calibration=boatLines))
 
 
 
-realRate <- 1.5; realBearing <- 130
+realRate <- .7; realBearing <- 130
 
-testDat <- makeCircle(start=start, center=start, distance=1.5, angles=seq(from=150, to=330, length.out=20), boatKnots=10)
+testDat <- makeCircle(start=start, center=start, distance=1, angles=seq(from=0, to=180, length.out=60), boatKnots=10)
 testit(testDat, start, realRate, realBearing, plot=T, like=FALSE, debug=FALSE, numInit = 12, numGrid=30,
        angleError=10, angleBias=7, modelSd=10)
 
-testDat <- makeLines(start=start, distances=c(1,1), boatKnots=10, angle=90, turn=160, nPoints=c(1,10))
+testDat <- makeLines(start=start, distances=c(1,1), boatKnots=10, angle=90, turn=160, nPoints=c(1,20))
 testit(testDat, start, realRate, realBearing, plot=TRUE, like=F, debug=F, numInit = 12, numGrid=50,
        angleError=10, angleBias=0, modelSd=10)
 
+testit(testDat, start, realRate, realBearing, plot=TRUE, like=T, debug=F, numInit = 10, numGrid=50,
+           angleError=5, angleBias=0, modelSd=5)
+
+testitbias(testDat, start, realRate, realBearing, plot=TRUE, like=F, debug=F, numInit = 10, numGrid=50,
+       angleError=5, angleBias=0, modelSd=5)
+
 driftSims <- do.call(rbind, lapply(1:100, function(x) {
-  drift <- testit(testDat, start, realRate, realBearing, plot=F, like=FALSE, debug=FALSE, numInit = 12, numGrid=30,
-         angleError=10, angleBias=20, modelSd=10)
-  data.frame(Rate=drift$rate, Bearing = drift$bearing)
+  drift <- testit(testDat, start, realRate, realBearing, plot=F, like=FALSE, debug=FALSE, numInit = 10, numGrid=30,
+         angleError=5, angleBias=0, modelSd=1)
+  data.frame(Rate=drift$rate, Bearing = drift$bearing, RateErr=drift$err[1], BearingErr=drift$err[2])
 }))
 
 simDiagnostic(start, filter(driftSims, Rate < 3), realRate, realBearing, 60*45)
