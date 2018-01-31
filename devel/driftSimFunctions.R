@@ -62,19 +62,27 @@ makeDifar <- function(boat, buoy) {
 }
 
 simDiagnostic <- function(start, driftData, rate, bearing, time=60*10) {
-  rateHist <- ggplot(driftData, aes(x=Rate)) + geom_histogram(binwidth=.1) +
-    geom_vline(xintercept=rate, size=2, color='green') + xlim(0,3.2)
-  bearingHist <- ggplot(driftData, aes(x=Bearing)) + geom_histogram(binwidth=2) +
-    geom_vline(xintercept=bearing, size=2, color='green') + xlim(0,360)
-  rateErrHist <- ggplot(driftData, aes(x=RateErr)) + geom_histogram(binwidth=.002) + xlim(0,.3)
-  bearingErrHist <- ggplot(driftData, aes(x=BearingErr)) + geom_histogram(binwidth=.25) + xlim(0,40)
+  rateHist <- ggplot(driftData, aes(x=Rate, fill=RateCI2)) + geom_histogram(binwidth=.1) +
+    geom_vline(xintercept=rate, size=2, color='green', alpha=.5) + xlim(0,3.2) +
+    labs(title=as.character(sum(driftData$RateCI2, na.rm=TRUE)/nrow(driftData)))
+
+  bearingHist <- ggplot(driftData, aes(x=Bearing, fill=BearingCI2)) + geom_histogram(binwidth=2) +
+    geom_vline(xintercept=bearing, size=2, color='green', alpha=.5) + xlim(0,360) +
+    labs(title=as.character(sum(driftData$BearingCI2, na.rm=TRUE)/nrow(driftData)))
+
+  rateErrHist <- ggplot(driftData, aes(x=RateErr)) + geom_histogram(binwidth=.002) + xlim(0,1)
+
+  bearingErrHist <- ggplot(driftData, aes(x=BearingErr)) + geom_histogram(binwidth=.25) + xlim(0,90)
+
   endings <- mapply(destination, start$Latitude, start$Longitude, driftData$Bearing,
                     driftData$Rate*time/3600, units='km')
   realEnd <- destination(start$Latitude, start$Longitude, bearing, rate*time/3600, units='km')
   distError <- mapply(distance, realEnd[1], realEnd[2], endings[1,], endings[2,], units='km')
+
   distHist <- ggplot(data.frame(Distance=distError), aes(x=Distance)) + geom_histogram(binwidth=.02) +
     xlim(0, max(distError, rate*time/3600)) + geom_vline(xintercept=rate*time/3600, size=2, color='green') +
     labs(title=as.character(rate*time/3600))
+
   endDf <- data.frame(Latitude=endings[1,], Longitude=endings[2,])
   driftPlot <- ggplot(endDf) +
     geom_segment(aes(x=start$Longitude, y=start$Latitude, xend=Longitude, yend=Latitude), color='blue', alpha=.2) +

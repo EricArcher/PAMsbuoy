@@ -41,7 +41,7 @@ testDat <- makeCircle(start=start, center=start, distance=1, angles=seq(from=0, 
 testit(testDat, start, realRate, realBearing, plot=T, like=FALSE, debug=FALSE, numInit = 12, numGrid=30,
        angleError=10, angleBias=7, modelSd=10)
 
-testDat <- makeLines(start=start, distances=c(1,1), boatKnots=10, angle=90, turn=160, nPoints=c(1,20))
+testDat <- makeLines(start=start, distances=c(1,1.2), boatKnots=10, angle=90, turn=160, nPoints=c(15,20))
 testit(testDat, start, realRate, realBearing, plot=TRUE, like=F, debug=F, numInit = 12, numGrid=50,
        angleError=10, angleBias=0, modelSd=10)
 
@@ -49,15 +49,16 @@ testit(testDat, start, realRate, realBearing, plot=TRUE, like=T, debug=F, numIni
            angleError=5, angleBias=0, modelSd=5)
 
 testitbias(testDat, start, realRate, realBearing, plot=TRUE, like=F, debug=F, numInit = 10, numGrid=50,
-       angleError=5, angleBias=0, modelSd=5)
+       angleError=5, angleBias=10, modelSd=5)
 
 driftSims <- do.call(rbind, lapply(1:100, function(x) {
-  drift <- testit(testDat, start, realRate, realBearing, plot=F, like=FALSE, debug=FALSE, numInit = 10, numGrid=30,
-         angleError=5, angleBias=0, modelSd=1)
-  data.frame(Rate=drift$rate, Bearing = drift$bearing, RateErr=drift$err[1], BearingErr=drift$err[2])
+  drift <- testitbias(testDat, start, realRate, realBearing, plot=F, like=FALSE, debug=FALSE, numInit = 10, numGrid=30,
+         angleError=3, angleBias=15, modelSd=3)
+  data.frame(Rate=drift$rate, Bearing = drift$bearing, RateErr=drift$err[1], BearingErr=drift$err[2]) %>%
+    mutate(RateCI2 = (abs(Rate-realRate) < 2*RateErr), BearingCI2 = (abs(Bearing-realBearing) < 2*BearingErr))
 }))
 
-simDiagnostic(start, filter(driftSims, Rate < 3), realRate, realBearing, 60*45)
+simDiagnostic(start, filter(driftSims, Rate <= 3), realRate, realBearing, 60*45)
 
 ggplot(driftSims) +
   geom_histogram(aes(x=Rate), binwidth=.2) + geom_vline(xintercept=2)
