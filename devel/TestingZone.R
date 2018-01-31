@@ -146,7 +146,8 @@ colnames(finalDifar)
 finalDifar <- finalDifar %>%
   select(Buoy=Channel, BoatLatitude=BoatLat, BoatLongitude=BoatLong, UTC,
          BuoyLatitude, BuoyLongitude, DIFARBearing, Species, RealBearing, Distance) %>%
-  mutate(UTC=ymd_hms(UTC)) %>%
+  mutate(UTC=ymd_hms(UTC), AngleError = (RealBearing-DIFARBearing) %% 360,
+         AngleError = ifelse(AngleError > 180, AngleError-360, AngleError)) %>%
   rename(OldDifar = DIFARBearing, DIFARBearing=RealBearing)
 
 firstStation <- formatStation(db, buoyPositions = spots)
