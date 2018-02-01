@@ -1,5 +1,5 @@
 ---
-title: "`r title`"
+title: "`r cruiseName` Sonobuoy Report"
 params:
   set_title: temp title
 output:

@@ -109,6 +109,7 @@
 # Eric Qs
 # Offline mapping
 # Drift shenanigans confidence measure
+# Install phantom_js on package load
 
 ###
 # Drift problems

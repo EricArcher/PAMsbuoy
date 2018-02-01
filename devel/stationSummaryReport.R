@@ -5,37 +5,22 @@ library(kableExtra)
 library(ggplot2)
 library(PAMsbuoy)
 library(webshot)
-stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary', outdir='Report', format='word') {
+stationSummaryReport <- function(stationList, outdir='Report', format='word') {
   reportDirs <- paste0(outdir, c('', '/Tables', '/Figures'))
   for(dir in reportDirs[which(!dir.exists(reportDirs))]) {
     dir.create(dir)
   }
   detSummary <- detectionSummary(stationList)
-  myMap <- getMap(detSummary)
-  stationPlot <- mapStations(stationList, map=myMap, size=2)
-  stationPlotTitle <- stationPlot + labs(title='Figure 1: Caption style 1')
-  detectionPlotCombined <- mapDetections(detSummary, map=myMap, value='NumDetections', size=2)
-  detectionPlot <- mapDetections(detSummary, combine=FALSE, map=myMap, value='NumDetections', size=2)
 
-  unlink(list.files(paste0(outdir, '/Figures'), full.names=TRUE))
-
-  ggsave(filename='stationPlotTitle.jpeg', plot=stationPlotTitle, path=paste0(outdir, '/Figures'),
-         width=4, height=3, units='in', scale=2)
-  ggsave(filename='stationPlot.jpeg', plot=stationPlot, path=paste0(outdir, '/Figures'),
-         width=4, height=3, units='in', scale=2)
-  ggsave(filename='detectionPlotCombined.jpeg', plot=detectionPlotCombined, path=paste0(outdir, '/Figures'),
-         width=4*.8, height=3*.8, units='in', scale=2)
-  ggsave(filename='detectionPlot.jpeg', plot=detectionPlot, path=paste0(outdir, '/Figures'),
-         width=8*.8, height=4*.8, units='in', scale=1.5)
+  makeReportMaps(stationList, detSummary, path=paste0(outdir, './Figures'))
 
   tempRows <- 10
   detSummary <- head(detSummary, tempRows)
 
   unlink(list.files(paste0(outdir, '/Tables'), full.names=TRUE))
-
   htmlTableToImage(makeHtmlTable(detSummary), tableRows = nrow(detSummary),
                    outdir=paste0(outdir, '/Tables'), filename = 'detectionSummaryTable',maxRows = 5)
-
+  cruiseName <- readline(prompt = 'What is the name of this cruise?')
   switch(format,
          html = {
            outFile <- 'reportTemplate.html'
@@ -92,4 +77,23 @@ makeHtmlTable <- function(summaryData) {
     kable_styling('bordered') %>%
     row_spec(odds, background='#edf0f4') %>%
     collapse_rows(which(colnames(detSummary) %in% c('KSpecies','Station')))
+}
+
+makeReportMaps <- function(stationList, detSummary, path) {
+  myMap <- getMap(detSummary)
+  stationPlot <- mapStations(stationList, map=myMap, size=2)
+  stationPlotTitle <- stationPlot + labs(title='Figure 1: Caption style 1')
+  detectionPlotCombined <- mapDetections(detSummary, map=myMap, value='NumDetections', size=2)
+  detectionPlot <- mapDetections(detSummary, combine=FALSE, map=myMap, value='NumDetections', size=2)
+
+  unlink(list.files(path, full.names=TRUE))
+
+  ggsave(filename='stationPlotTitle.jpeg', plot=stationPlotTitle, path=path,
+         width=4, height=3, units='in', scale=2)
+  ggsave(filename='stationPlot.jpeg', plot=stationPlot, path=path,
+         width=4, height=3, units='in', scale=2)
+  ggsave(filename='detectionPlotCombined.jpeg', plot=detectionPlotCombined, path=path,
+         width=4*.8, height=3*.8, units='in', scale=2)
+  ggsave(filename='detectionPlot.jpeg', plot=detectionPlot, path=path,
+         width=8*.8, height=4*.8, units='in', scale=1.5)
 }
