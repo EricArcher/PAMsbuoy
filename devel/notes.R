@@ -70,10 +70,7 @@
 
 
 # Report Notes:
-# Try assuming it's in own page, then limit size. Need to do about 3/4 page size so there is
-# lots of room for table header
 # Captions: have both for figures, none for tables.
-# Table bottom is cutoff - add pixels to end
 
 # Ask for survey full text name for first [Cruise Name], then also short-hand for later in report.
 # then question For 1705_whatver, what is the vessel name
@@ -88,8 +85,6 @@
 
 # Table info: want also number of calls only heard on 1 buoy?
 # Collapsing will break if only 1 species or other shit
-
-# Paste pictures and tables into google docs so we can adjust text around it
 
 # Offline maps - ask Eric. Problem - my zooming relies on google bounds. Could have people
 # download some coastfiles or whatever before going out to sea.

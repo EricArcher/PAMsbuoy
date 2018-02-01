@@ -1,44 +1,52 @@
 ---
-title: "`r cruiseName` Sonobuoy Report"
+title: "`r paste0(cruiseName, ' (', cruiseAbbr, ')')` Sonobuoy Report"
 params:
   set_title: temp title
 output:
   pdf_document: default
   html_document: default
-  word_document: default
+  word_document: 
+    reference_docx: ./devel/myStyles.docx
 ---
 
-
-```{r echo=FALSE, results='asis'}
-detSumTables <- list.files('./Report/Tables', pattern='detectionSummaryTable_[0-9]*', full.names=TRUE)
-detSumHeader <- list.files('./Report/Tables', pattern='detectionSummaryTableHeader', full.names=TRUE)
-for(tbl in detSumTables) {
-  cat('  \n#####  \n')
-  cat('Table description and title here  \n')
-  cat("![](", detSumHeader,")\n")
-  cat("![](",tbl,")\n")
-}
-```
-
-# fart
-
-```{r echo=FALSE}
-include_graphics('./Report/Figures/stationPlotTitle.jpeg')
-```
+# `r paste0(cruiseName, ' (', cruiseAbbr, ')')` Sonobuoy Report
+### `r format(Sys.time(), format='%a %b %d %Y')`
 
 
-```{r echo=FALSE, fig.cap='Figure 2: Caption style 2'}
+Navy surplus sonobuoys (type-53F) were deployed from the survey vessel during `r cruiseAbbr`; this report includes deployments conducted between `r format(min(detSummary$UTC), format='%b %d %Y')` and `r format(max(detSummary$UTC), format='%b %d %Y')` on the vessel(s) [name of vessel(s) used]. Sonobuoys were programmed to allow for best performance (Table 1). Sonobuoy signals were received via shipboard antenna cabled to a Winradio sonobuoy receiver (model WR-G39WSBE). Recordings were digitized at a 48 kHz sampling rate with a [soundcard specifics] and recorded to hard drive sing Pamguard software (Pamguard version xxxx, Gillespie et al. 2008). 
+
+
+A total of `r nrow(distinct(detSummary, Station, Buoy))` sonobuoys were deployed at `r nrow(distinct(detSummary, Station))` stations throughout the study area (Fig. 1), including [x] from [vessel #1] and [x] from [ 2] (Table 1).  Deployments included [#] sonobuoy stations and [#] sonobuoys deployed opportunistically in the presence of sighted cetaceans (Table 1).  Opportunistic sonobuoys included a total of [x] minutes of recordings during confirmed visual sightings of [x] (Table 1). Acoustic detections included species name 
+`r gsub('(.* )([A-z]*)$', '\\1and \\2', paste(unique(detSummary$Species), collapse=', '))`
+[x] (Table 2, Figure 2).
+
+
+```{r echo=FALSE, fig.cap='Figure 1: Double Caption Action'}
 include_graphics('./Report/Figures/stationPlot.jpeg')
 ```
 
 
 ```{r echo=FALSE}
-include_graphics('./Report/Figures/detectionPlotCombined.jpeg')
+# include_graphics('./Report/Figures/detectionPlotCombined.jpeg')
 ```
 
-#####
-Break?
 
-```{r echo=FALSE}
+```{r echo=FALSE, fig.cap='Figure 2: I like captions'}
 include_graphics('./Report/Figures/detectionPlot.jpeg')
+```
+
+
+```{r echo=FALSE, results='asis'}
+detSumTables <- list.files('./Report/Tables', pattern='detectionSummaryTable_[0-9]*', full.names=TRUE)
+detSumHeader <- list.files('./Report/Tables', pattern='detectionSummaryTableHeader', full.names=TRUE)
+for(tbl in seq_along(detSumTables)) {
+  cat('  \n#####  \n')
+  if(tbl == 1) {
+    cat('Table 2: description and title here  \n')
+  } else {
+    cat('Table 2 (cont.)')
+  }
+  cat("![](", detSumHeader,")")
+  cat("![](",detSumTables[tbl],")\n")
+}
 ```

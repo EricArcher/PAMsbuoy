@@ -6,21 +6,25 @@ library(ggplot2)
 library(PAMsbuoy)
 library(webshot)
 
-stationSummaryReport <- function(stationList, outdir='Report', format='word') {
-  reportDirs <- paste0(outdir, c('', '/Tables', '/Figures'))
+stationSummaryReport <- function(stationList, outDir='Report', fileName='reportTemplate', format='word') {
+  reportDirs <- paste0(outDir, c('', '/Tables', '/Figures'))
 
   for(dir in reportDirs[which(!dir.exists(reportDirs))]) {
     dir.create(dir)
   }
   detSummary <- detectionSummary(stationList)
 
-  makeReportMaps(stationList, detSummary, path=paste0(outdir, './Figures'))
+  makeReportMaps(stationList, detSummary, path=paste0(outDir, './Figures'))
 
   tempRows <- 50
   detSummary <- head(detSummary, tempRows)
 
 
-  cruiseName <- readline(prompt = 'What is the name of this cruise?')
+  # cruiseName <- readline(prompt = 'What is the name of this cruise? \n')
+  # cruiseAbbr <- readline(prompt = 'What is the abbreviated name for this cruise? \n')
+  cruiseName <- 'Not a Real Cruise'
+  cruiseAbbr <- 'NaRC'
+  # numVessels <- readline(prompt = 'How many vessels ')
 
   unlink(list.files(paste0(outDir, '/Tables'), full.names=TRUE))
 
@@ -92,19 +96,17 @@ makeHtmlTable <- function(summaryData) {
 
 makeReportMaps <- function(stationList, detSummary, path) {
   myMap <- getMap(detSummary)
-  stationPlot <- mapStations(stationList, map=myMap, size=2)
-  stationPlotTitle <- stationPlot + labs(title='Figure 1: Caption style 1')
-  detectionPlotCombined <- mapDetections(detSummary, map=myMap, value='NumDetections', size=2)
-  detectionPlot <- mapDetections(detSummary, combine=FALSE, map=myMap, value='NumDetections', size=2)
+  stationPlot <- mapStations(stationList, map=myMap, size=2) + labs(title='Figure 1: Sonobuoy Stations')
+  # detectionPlotCombined <- mapDetections(detSummary, map=myMap, value='NumDetections', size=2)
+  detectionPlot <- mapDetections(detSummary, combine=FALSE, map=myMap, value='NumDetections', size=2) +
+    labs(title='Figure 2: Species Detections')
 
   unlink(list.files(path, full.names=TRUE))
 
-  ggsave(filename='stationPlotTitle.jpeg', plot=stationPlotTitle, path=path,
-         width=4, height=3, units='in', scale=2)
   ggsave(filename='stationPlot.jpeg', plot=stationPlot, path=path,
-         width=4, height=3, units='in', scale=2)
-  ggsave(filename='detectionPlotCombined.jpeg', plot=detectionPlotCombined, path=path,
-         width=4*.8, height=3*.8, units='in', scale=2)
+         width=6, height=4.5, units='in', dpi=200)
+  # ggsave(filename='detectionPlotCombined.jpeg', plot=detectionPlotCombined, path=path,
+  #        width=4*.8, height=3*.8, units='in', scale=2)
   ggsave(filename='detectionPlot.jpeg', plot=detectionPlot, path=path,
-         width=8*.8, height=4*.8, units='in', scale=1.5)
+         width=8, height=4, units='in', dpi=300)
 }
