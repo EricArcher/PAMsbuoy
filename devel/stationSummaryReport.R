@@ -29,13 +29,17 @@ stationSummaryReport <- function(stationList, title='Sonobuoy Deployment Summary
   ggsave(filename='detectionPlot.jpeg', plot=detectionPlot, path=paste0(outDir, '/Figures'),
          width=8*.8, height=4*.8, units='in', scale=1.5)
 
-  tempRows <- 10
+  tempRows <- 50
   detSummary <- head(detSummary, tempRows)
 
   unlink(list.files(paste0(outDir, '/Tables'), full.names=TRUE))
 
+  perStation <- detSummary %>% filter(Station == .$Station[1]) %>% nrow
+  maxRows <- 25
+  # Round the max number down so a station never gets split
+  tableRows <- maxRows - (maxRows %% perStation)
   htmlTableToImage(makeHtmlTable(detSummary), tableRows = nrow(detSummary),
-                   outDir=paste0(outDir, '/Tables'), fileName = 'detectionSummaryTable',maxRows = 5)
+                   outDir=paste0(outDir, '/Tables'), fileName = 'detectionSummaryTable', maxRows = tableRows)
 
   switch(format,
          html = {
@@ -61,11 +65,12 @@ htmlTableToImage <- function(inTable, tableRows, headerHeight=59, rowHeight=37,
   tmp <- tempfile('tmpTable', fileext = '.html')
   myTable <- inTable
   rmarkdown::render('tableTemplate.Rmd', tmp, output_format='html_document', quiet=TRUE)
-  for(tbls in 1:ceiling(tableRows/maxRows)) {
-    imageName <- paste0(outPath, fileName, '_', tbls, '.png')
-    if(tbls==1) {
+  for(tbls in 0:ceiling(tableRows/maxRows)) {
+    imageName <- paste0(outPath, fileName, '_', tbls-1, '.png')
+    if(tbls==0) {
+      imageName <- paste0(outPath, fileName, 'Header.png')
       top <- 0
-      length <- min(maxRows, tableRows)*rowHeight + headerHeight
+      length <- headerHeight
     } else if(tbls==ceiling(tableRows/maxRows)) {
       top <- headerHeight + rowHeight*maxRows*(tbls-1)
       length <- min(maxRows, tableRows-maxRows*(tbls-1))*rowHeight + 1
