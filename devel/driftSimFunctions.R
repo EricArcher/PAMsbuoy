@@ -298,4 +298,15 @@ testitbias <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug
   drift
 }
 
+# Distance dist function
+distanceDistribution <- function(boat, start, rate=.7, bearing=130, angleError=5, angleBias=0, reps=20, time=60*60) {
+  buoy <- driftBuoy(start, rate, bearing, times=boat$UTC)
+  boat <- makeDifar(boat, buoy) %>% mutate(DIFARBearing = DIFARBearing + rnorm(nrow(boat), angleBias, angleError))
+  driftLike <- likeDf(boat=boat, start=start, nRates=reps, nAngles=reps, sd=10) %>%
+    arrange(desc(Value)) %>% mutate(Value = exp(Value))
+  endPoints <- mapply(swfscMisc::destination, start$Latitude, start$Longitude, driftLike$Angle,
+                                     distance = driftLike$Rate*time/3600)
+  distances <- mapply(distance, endPoints[1,1], endPoints[2,1], endPoints[1,], endPoints[2,], units='km')
+  driftLike %>% mutate(Latitude=endPoints[1,], Longitude=endPoints[2,], Distance=distances)
+}
 

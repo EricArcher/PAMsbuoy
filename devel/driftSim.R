@@ -89,4 +89,16 @@ graphMe <- do.call(rbind, lapply(seq(0,90,5), function(angle) {
 
 ggplot(graphMe, aes(x=RateRatio, y=DistErrorRatio, color=as.factor(AngleError))) + geom_line() + geom_hline(yintercept=1) + ylim(0,3)
 ##############
+# Distance distribution
+##############
 
+distDist <- distanceDistribution(testDat, start, reps=100, angleError=3)
+distDist <- distDist %>%
+  mutate(DistBreaks = cut(Distance, seq(0, max(distDist$Distance)+.1, .1), ordered_result = TRUE, include.lowest = TRUE))
+distSummary <- group_by(distDist, DistBreaks) %>% summarise(Like = sum(Value)) %>%
+  mutate(Like=Like/sum(.$Like), CumLike = cumsum(Like), Distance=as.numeric(DistBreaks)*.1,
+         CI=cut(CumLike, c(0,.9,.95,1), include.lowest=TRUE))
+ggplot(distSummary, aes(x=Distance, y=Like, fill=CI)) + geom_col() +
+  scale_fill_manual(values=c('darkgreen', 'orange', 'red')) + xlim(0,6)
+
+ggplot(distSummary, aes(x=Distance, y=CumLike)) + geom_line()

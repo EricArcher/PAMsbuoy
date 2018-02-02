@@ -103,9 +103,23 @@
 ####
 # Eric Qs
 # Offline mapping
+## 3 options: download bases google map first?
+### People can supply coord bounds, then get map at start
+### see if get_map returns something when offline
 # Drift shenanigans confidence measure
+## Convert rate/bear to points, then distance from max like point after an hour or whatever
 # Install phantom_js on package load
 
 ###
 # Drift problems
 # Angle error is a worse problem when you are further away
+
+## Offline - have a preparatory function to download all offline stuff before casting off
+# Also create folder with default info? Like cruise number, ship name, coord bounds, saved in a text file
+# Possibly wincruise style formatting. Save as an rdata object.
+
+# We may need to rewrite shit with S4 methods. New github branch to start working on this. Will finish
+# this version first, then try again later.
+
+## LATERRRRR
+# Shiny for the layman
