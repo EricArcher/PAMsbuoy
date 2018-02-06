@@ -59,8 +59,6 @@
 # 5) sound source estimation? 6) localization?
 
 #################
-# Can you save a pretty html table as in image, then load into word doc?
-#
 # Create small report on drift stuff for Shannon showing results of simulations
 
 ###### POTENTIAL PROBLEM####

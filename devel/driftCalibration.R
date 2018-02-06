@@ -27,9 +27,9 @@ driftCalibration <- function(buoy.data, graph=FALSE, initial=c(1, 0), sd=10, ...
       list(rate=driftDf$Rate[1], bearing=driftDf$Angle[1], graph=graph)
 
     } else {
-      initDrift <- likeDf(nAngles=10, nRates=10, boat=buoy$calibration, start=start, sd=sd) %>%
-        arrange(desc(Value))
-      initial=c(initDrift$Rate[1], initDrift$Angle[1])
+      # initDrift <- likeDf(nAngles=10, nRates=10, boat=buoy$calibration, start=start, sd=sd) %>%
+      #   arrange(desc(Value))
+      # initial=c(initDrift$Rate[1], initDrift$Angle[1])
       drift <- optim(par=initial, driftLogl, boat=buoy$calibration, start=start, sd=sd,
                      control=list('fnscale'=-1, maxit=10000, parscale=c(30,1)),
                      hessian=TRUE, method='L-BFGS-B', lower=c(0, 0), upper=c(3, 360))
@@ -49,13 +49,16 @@ driftLogl <- function(boat, start, drift, sd=4) {
 }
 
 expectedBearing <- function(boat, start, drift.rate, drift.phi) {
-  drift.distance <- sapply(boat$UTC, function(t) {
-    drift.rate*difftime(t, start$UTC, units='secs')/3600 # using seconds
-  })
+  # drift.distance <- sapply(boat$UTC, function(t) {
+  #   drift.rate*difftime(t, start$UTC, units='secs')/3600 # using seconds
+  # })
+  drift.distance <- drift.rate*(as.numeric(boat$UTC)-as.numeric(start$UTC))/3600
   buoyLoc <- matrix(
     swfscMisc::destination(start$Latitude, start$Longitude, brng=drift.phi, distance=drift.distance, units='km'),
     ncol=2)
   swfscMisc::bearing(buoyLoc[,1], buoyLoc[,2], boat$BoatLatitude, boat$BoatLongitude)[1:nrow(boat)]
+  # buoyLoc <- geosphere::destPoint(c(start$Longitude, start$Latitude), b=drift.phi, d=drift.distance*1000)
+  # geosphere::bearing(buoyLoc, cbind(boat$BoatLongitude, boat$BoatLatitude))
 }
 
 likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start, sd=10) {
@@ -68,3 +71,4 @@ likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start, sd=10) {
     data.frame(Rate=r, Angle=angles, Value=value)
   }))
 }
+

@@ -120,18 +120,7 @@ endPoint <- function(buoys, drift, endNum, buoyNum) {
 if(is.null(webshot:::find_phantom())) {
   webshot::install_phantomjs()
 }
-spots <- read.csv('../SonoBuoy/Data/spot_messages_RUST_JLK.csv') %>%
-  mutate(UTC = mdy_hm(datetime, tz='America/Los_Angeles'),
-         UTC = with_tz(UTC, tzone='UTC'),
-         Buoy = as.factor(sapply(PlotPoints, firstTrialId))) %>%
-  arrange(UTC) %>% select(UTC, Latitude, Longitude, Buoy) %>%
-  group_by(Buoy) %>% top_n(-2,UTC)
 
-spotsAll <- read.csv('../SonoBuoy/Data/spot_messages_RUST_JLK.csv') %>%
-  mutate(UTC = mdy_hm(datetime, tz='America/Los_Angeles'),
-         UTC = with_tz(UTC, tzone='UTC'),
-         Buoy = as.factor(sapply(PlotPoints, firstTrialId))) %>%
-  arrange(UTC) %>% select(UTC, Latitude, Longitude, Buoy)
 
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
 difarTest <- formatStation(db, buoyPositions = spots)
@@ -220,30 +209,4 @@ for(i in 1:4) {
 }
 gridExtra::grid.arrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow=2)
 
-x<-1:3; y<-4:6; z<-10:11
-system.time(
-  test <- do.call(rbind, lapply(x, function(a) {
-    tdf <- do.call(rbind, lapply(y, function(b) {
-      val <- sapply(z, function(c) {
-        a+b+c
-      })
-      data.frame(ys=b, zs=z,sum=val)
-    }))
-    tdf$xs <- a
-    select(tdf, xs, ys, zs, sum)
-  }))
-)
-system.time({
-  size <- length(x)*length(y)
-  result <- data.frame(xs=vector('numeric', length=size),
-                       ys=vector('numeric', length=size),
-                       val=vector('numeric', length=size))
-  i <- 1
-  for(a in x) {
-    for(b in y) {
-      d <- a+b
-      result[i,] <- c(a, b, d)
-      i <- i+1
-    }
-  }
-})
+

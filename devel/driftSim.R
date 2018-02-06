@@ -36,29 +36,31 @@ driftCalibration(list(position=start, calibration=boatLines))
 
 
 realRate <- .7; realBearing <- 130
+angleBias <- 0; angleError <- 7; modelSd <- 7
 
-testDat <- makeCircle(start=start, center=start, distance=1, angles=seq(from=0, to=180, length.out=60), boatKnots=10)
-testit(testDat, start, realRate, realBearing, plot=T, like=FALSE, debug=FALSE, numInit = 12, numGrid=30,
-       angleError=10, angleBias=7, modelSd=10)
+testDat <- makeCircle(start=start, center=start, distance=1, angles=seq(from=0, to=360, length.out=50), boatKnots=10)
+testit(testDat, start, realRate, realBearing, plot=TRUE, like=TRUE, debug=FALSE, numInit = 12, numGrid=50,
+       angleError=angleError, angleBias=angleBias, modelSd=modelSd)
 
-testDat <- makeLines(start=start, distances=c(1,1.2), boatKnots=10, angle=90, turn=160, nPoints=c(15,20))
-testit(testDat, start, realRate, realBearing, plot=TRUE, like=F, debug=F, numInit = 12, numGrid=50,
-       angleError=10, angleBias=0, modelSd=10)
+testDat <- makeLines(start=start, distances=c(2,2), boatKnots=10, angle=90, turn=160, nPoints=c(50,50))
+set.seed(12345)
+testit(testDat, start, realRate, realBearing, plot=TRUE, like=TRUE, debug=FALSE, numInit = 12, numGrid=50,
+       angleError=angleError, angleBias=angleBias, modelSd=modelSd)
 
-testit(testDat, start, realRate, realBearing, plot=TRUE, like=T, debug=F, numInit = 10, numGrid=50,
-           angleError=5, angleBias=0, modelSd=5)
+testit(testDat, start, realRate, realBearing, plot=TRUE, like=TRUE, debug=FALSE, numInit = 10, numGrid=50,
+           angleError=angleError, angleBias=angleBias, modelSd=modelSd)
 
-testitbias(testDat, start, realRate, realBearing, plot=TRUE, like=F, debug=F, numInit = 10, numGrid=50,
-       angleError=5, angleBias=10, modelSd=5)
+testitbias(testDat, start, realRate, realBearing, plot=TRUE, like=FALSE, debug=FALSE, numInit = 10, numGrid=50,
+       angleError=angleError, angleBias=angleBias, modelSd=modelSd)
 
 driftSims <- do.call(rbind, lapply(1:100, function(x) {
-  drift <- testitbias(testDat, start, realRate, realBearing, plot=F, like=FALSE, debug=FALSE, numInit = 10, numGrid=30,
-         angleError=3, angleBias=15, modelSd=3)
+  drift <- testit(testDat, start, realRate, realBearing, plot=FALSE, like=FALSE, debug=FALSE, numInit = 50, numGrid=30,
+         angleError=angleError, angleBias=angleBias, modelSd=modelSd)
   data.frame(Rate=drift$rate, Bearing = drift$bearing, RateErr=drift$err[1], BearingErr=drift$err[2]) %>%
     mutate(RateCI2 = (abs(Rate-realRate) < 2*RateErr), BearingCI2 = (abs(Bearing-realBearing) < 2*BearingErr))
 }))
 
-simDiagnostic(start, filter(driftSims, Rate <= 3), realRate, realBearing, 60*45)
+simDiagnostic(start, filter(driftSims, Rate <= 3), realRate, realBearing, 60*60)
 
 ggplot(driftSims) +
   geom_histogram(aes(x=Rate), binwidth=.2) + geom_vline(xintercept=2)
@@ -91,14 +93,32 @@ ggplot(graphMe, aes(x=RateRatio, y=DistErrorRatio, color=as.factor(AngleError)))
 ##############
 # Distance distribution
 ##############
+# tf <- tempfile()
+# Rprof(tf)
+set.seed(123)
+distDist <- distanceDistribution(testDat, start, reps=100, angleError=30, angleBias = 0)
+# prof <- lineprof(brbgs <- expectedBearing(boat, start, 1,1), torture=TRUE)
+# prof
+# brngs <- for(i in 1:1000) {
+#   expectedBearing(boat, start, 1, 1)
+# }
+# Rprof(NULL)
+# summaryRprof(tf)
 
-distDist <- distanceDistribution(testDat, start, reps=100, angleError=3)
+breakLevel <- .05
 distDist <- distDist %>%
-  mutate(DistBreaks = cut(Distance, seq(0, max(distDist$Distance)+.1, .1), ordered_result = TRUE, include.lowest = TRUE))
+  mutate(DistBreaks = cut(Distance, seq(0, max(distDist$Distance)+breakLevel, breakLevel), ordered_result = TRUE, include.lowest = TRUE))
 distSummary <- group_by(distDist, DistBreaks) %>% summarise(Like = sum(Value)) %>%
-  mutate(Like=Like/sum(.$Like), CumLike = cumsum(Like), Distance=as.numeric(DistBreaks)*.1,
-         CI=cut(CumLike, c(0,.9,.95,1), include.lowest=TRUE))
-ggplot(distSummary, aes(x=Distance, y=Like, fill=CI)) + geom_col() +
-  scale_fill_manual(values=c('darkgreen', 'orange', 'red')) + xlim(0,6)
+  mutate(Like=Like/sum(.$Like), CumLike = cumsum(Like), Distance=as.numeric(DistBreaks)*breakLevel,
+         CI=cut(CumLike, c(0,.9,.95,.99, 1), include.lowest=TRUE))
+maxCI <- distSummary %>% group_by(CI) %>% summarise(Max=max(Distance))
+
+ggplot(distSummary, aes(x=Distance, y=Like, fill=CI)) + geom_col(alpha=.5, position=position_nudge(x=-breakLevel/2)) +
+  geom_vline(data=maxCI[-4,], aes(xintercept=Max, color=CI), size=2, show.legend=FALSE) +
+  scale_color_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
+  scale_fill_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
+  coord_cartesian(xlim=c(0,3), expand=FALSE) +
+  scale_x_continuous(breaks=c(seq(0,3,1), maxCI$Max[1:3]))
 
 ggplot(distSummary, aes(x=Distance, y=CumLike)) + geom_line()
+

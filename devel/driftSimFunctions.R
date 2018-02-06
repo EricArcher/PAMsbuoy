@@ -78,15 +78,28 @@ simDiagnostic <- function(start, driftData, rate, bearing, time=60*10) {
                     driftData$Rate*time/3600, units='km')
   realEnd <- destination(start$Latitude, start$Longitude, bearing, rate*time/3600, units='km')
   distError <- mapply(distance, realEnd[1], realEnd[2], endings[1,], endings[2,], units='km')
+  distDf <- data.frame(Distance=distError) %>%
+    arrange(Distance) %>% mutate(Percent=1/n(), CumSum=cumsum(Percent),
+                                 CI = cut(CumSum, c(0,.9,.95,.99,1), include.lowest=TRUE))
+  maxCI <- distDf %>% group_by(CI) %>% summarise(Max=max(Distance))
 
-  distHist <- ggplot(data.frame(Distance=distError), aes(x=Distance)) + geom_histogram(binwidth=.02) +
-    xlim(0, max(distError, rate*time/3600)) + geom_vline(xintercept=rate*time/3600, size=2, color='green') +
+  distHist <- ggplot(distDf, aes(x=Distance, fill=CI)) +
+    geom_histogram(binwidth=.05, position=position_nudge(x=-.05/2), alpha=.5) +
+    # xlim(0, max(distError, rate*time/3600)) +
+    # geom_vline(xintercept=rate*time/3600, size=2, color='green') +
+    geom_vline(data=maxCI, aes(xintercept=Max, color=CI)) +
+    scale_color_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
+    scale_fill_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
+    scale_x_continuous(breaks=c(0,1,2, round(maxCI$Max[1:3], 2))) +
     labs(title=as.character(rate*time/3600))
 
   endDf <- data.frame(Latitude=endings[1,], Longitude=endings[2,])
   driftPlot <- ggplot(endDf) +
-    geom_segment(aes(x=start$Longitude, y=start$Latitude, xend=Longitude, yend=Latitude), color='blue', alpha=.2) +
-    geom_segment(x=start$Longitude, y=start$Latitude, xend=realEnd[2], yend=realEnd[1], color='green', size=3)
+    geom_point(aes(x=Longitude, y=Latitude), color='blue', size=2, alpha=.4) +
+    geom_point(aes(x=realEnd[2], y=realEnd[1]), color='darkgreen', size=4) +
+    geom_point(aes(x=start$Longitude, y=start$Latitude), color='green', size=4)
+    # geom_segment(aes(x=start$Longitude, y=start$Latitude, xend=Longitude, yend=Latitude), color='blue', alpha=.2) +
+    # geom_segment(x=start$Longitude, y=start$Latitude, xend=realEnd[2], yend=realEnd[1], color='green', size=3)
   grid.arrange(rateHist, bearingHist, distHist, driftPlot, rateErrHist, bearingErrHist, nrow=2)
 }
 
@@ -127,7 +140,31 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
   if(like) {
     # browser()
     driftLike <- likeDf(nAngles=numGrid, nRates=numGrid, boat=boat, start=start, sd=modelSd) %>%
-      arrange(desc(Value)) %>% mutate(Value = Value/nrow(boat))
+      arrange(desc(Value)) %>% mutate(ExpValue = exp(Value), Value = Value/nrow(boat))
+    ### DIST STUFF ###
+    breakLevel <- 0.05
+    time <- 60*60
+    endPoints <- mapply(swfscMisc::destination, start$Latitude, start$Longitude, driftLike$Angle,
+                        distance = driftLike$Rate*time/3600, units='km')
+    distances <- mapply(distance, endPoints[1,1], endPoints[2,1], endPoints[1,], endPoints[2,], units='km')
+    driftLike <- mutate(driftLike, Latitude=endPoints[1,], Longitude=endPoints[2,], Distance=distances,
+                        DistBreaks = cut(Distance, seq(0, max(Distance)+breakLevel, breakLevel), ordered_result = TRUE, include.lowest = TRUE),
+                        ExpValue=ExpValue/sum(driftLike$ExpValue))
+    distSummary <- group_by(driftLike, DistBreaks) %>% summarise(Like = sum(ExpValue)) %>%
+      mutate(Like = Like/sum(.$Like), CumLike = cumsum(Like), Distance=as.numeric(DistBreaks)*breakLevel,
+             CI=cut(CumLike, c(0,.9,.95,.99,1), include.lowest=TRUE))
+    maxCI <- distSummary %>% group_by(CI) %>% summarise(Max=max(Distance))
+
+    distancePlot <- ggplot(distSummary, aes(x=Distance, y=Like, fill=CI)) + geom_col(alpha=.5, position=position_nudge(x=-breakLevel/2)) +
+      geom_vline(data=maxCI[-4,], aes(xintercept=Max, color=CI), size=2, show.legend=FALSE) +
+      scale_color_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
+      scale_fill_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
+      coord_cartesian(xlim=c(0,1), expand=FALSE) +
+      scale_x_continuous(breaks=c(0, maxCI$Max[1:3]))
+    # endPoints <- geosphere::destPoint(c(start$Longitude, start$Latitude), driftLike$Angle, driftLike$Rate*time/3.6)
+    # distances <- geosphere::distGeo(endPoints, endPoints[1,])
+    # driftLike %>% mutate(Latitude=endPoints[,2], Longitude=endPoints[,1], Distance = distances)
+    ########
     debugPoints <- data.frame(Angle = c(initDrift$Angle[1], drift$bearing[1], driftLike$Angle[1], bearing),
                               Rate = c(initDrift$Rate[1], drift$rate[1], driftLike$Rate[1], rate),
                               Name = c('Initial', 'Drift Estimate', 'Grid Estimate', 'Actual'))
@@ -147,6 +184,8 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
                    breaks=contours[3], color='darkgreen', size=2) +
       geom_contour(data=driftLike, aes(x=Angle, y=Rate, z=Value),
                    breaks=contours[4], color='red', size=2) +
+      # geom_contour(data=driftLike, aes(x=Angle, y=Rate, z=Distance),
+      #              breaks=c(.1, .5, 1, 1.5, 2)) +
       geom_point(data=debugPoints, aes(x=Angle, y=Rate, color=Name), size=3) +
       geom_segment(data=errPoints, aes(x=StartAngle, y=StartRate, xend=EndAngle, yend=EndRate), size=rep(2:1,2), alpha=.5)
     drift$Like <- head(driftLike)
@@ -166,7 +205,7 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
     if(like & debug) {
       print(gridExtra::grid.arrange(boatPlot, anglePlot, miniLikePlot, likePlot, nrow=2))
     } else if(like) {
-      print(gridExtra::grid.arrange(boatPlot, anglePlot, likePlot, nrow=2))
+      print(gridExtra::grid.arrange(boatPlot, anglePlot, likePlot, distancePlot, nrow=2))
     } else if(debug) {
       print(gridExtra::grid.arrange(boatPlot, anglePlot, miniLikePlot, nrow=2))
     } else {
@@ -178,125 +217,6 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
   drift
 }
 
-##################### BIASED VERSION ########################
-driftCalibrationBias <- function(buoy.data, graph=FALSE, initial=c(1, 0, 0), nGrids=c(20,10,10), inits=c(5,5,5), test=TRUE, sd=10, ...) {
-  # Check if it is just one buoy of a station, instead of the list of all buoys
-  if('position' %in% names(buoy.data)) {
-    buoy.data <- list(buoy.data)
-    names(buoy.data) <- buoy.data[[1]]$position$Buoy[1]
-  }
-  lapply(buoy.data, function(buoy) {
-    start <- buoy$position[1,]
-    if(graph) {
-      driftDf <- likeDfBias(nAngles=nGrids[1],nRates=nGrids[2], nBias=nGrids[3], boat=buoy$calibration, start=start, sd=sd) %>%
-        arrange(desc(Value))
-      graph <- ggplot(driftDf, aes(x=Angle, y=Rate, fill=log(-Value))) + geom_tile() +
-        scale_fill_gradientn(colors=viridis(256, direction=-1, option='magma'))
-      list(rate=driftDf$Rate[1], bearing = driftDf$Angle[1], bias=driftDf$Bias[1], graph=graph)
-    } else {
-      initDrift <-likeDfBias(nAngles=inits[1], nRates=inits[2], nBias=inits[3], boat=buoy$calibration, start=start, sd=sd) %>%
-        arrange(desc(Value))
-      if(test) {
-        initVals <- c(initDrift$Rate[1], initDrift$Angle[1], initDrift$Bias[1])
-      } else {
-        initVals <- initial
-      }
-      drift <- optim(par=initVals, driftLoglBias, boat=buoy$calibration, start=start, sd=sd,
-                     control=list('fnscale'=-1, maxit=10000, parscale=c(30,1, 5)),
-                     hessian=TRUE, method='L-BFGS-B', lower=c(0, 0, -20), upper=c(3, 360, 20))
-      list(rate=drift$par[1], bearing=drift$par[2], bias=drift$par[3], err=sqrt(diag(solve(-drift$hessian))))
-    }
-  })
-}
-
-driftLoglBias <- function(boat, start, drift, sd=4) {
-  # Drift is rate, bearing , bias
-  expected <- expectedBearing(boat, start, drift[1], drift[2])
-  error <- sapply((boat$DIFARBearing - drift[3] - expected) %% 360, function(x) {
-    if(x < abs(x-360)) {x}
-    else {x-360}
-  }
-  )
-  -1*(nrow(boat)/2)*log(2*pi*(sd^2)) - (1/2/(sd^2))*sum((error)^2)
-}
-
-likeDfBias <- function(nAngles=30, nRates=10, nBias=20, FUN=driftLoglBias, boat, start, sd=10) {
-  angles <- seq(0,360, length.out=nAngles)
-  rates <- seq(0, 3, length.out=nRates)
-  bias <- seq(-10, 10, length.out=nBias)
-  do.call(rbind, lapply(rates, function(r) {
-    tempdf <- do.call(rbind, lapply(angles, function(a) {
-      value <- sapply(bias, function(b) {
-        FUN(boat, start, c(r,a,b),sd)
-      })
-      data.frame(Angle=a, Bias=bias, Value=value)
-    }))
-    tempdf$Rate <- r
-    select(tempdf, Rate, Angle, Bias, Value)
-  }))
-}
-
-testitbias <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FALSE,
-                   numInit=5, numGrid=60, angleError=0, angleBias=0, modelSd = 10) {
-  buoy <- driftBuoy(start, rate, bearing, times=boat$UTC)
-  boat <- makeDifar(boat, buoy) %>% mutate(DIFARBearing = DIFARBearing + rnorm(nrow(boat), angleBias, angleError))
-  drift <- driftCalibrationBias(list(position=start, calibration=boat), inits=c(5,5,5), sd=modelSd)[[1]]
-  endPoints <- swfscMisc::destination(start$Latitude, start$Longitude, drift$bearing,
-                                drift$rate*difftime(boat$UTC[nrow(boat)], start$UTC, units='secs')/3600,
-                                units='km')
-  boatPlot <- ggplot() + geom_point(data=boat, aes(x=BoatLongitude, y=BoatLatitude, color='Boat Path')) +
-    geom_point(data=buoy, aes(x=Longitude, y=Latitude, color='Buoy Path')) +
-    geom_segment(aes(x=start$Longitude, xend=endPoints[2], y=start$Latitude, yend=endPoints[1], color='Drift Estimate'),
-                 size=6, alpha=.4) +
-    labs(title=paste0('Angle Error: ', angleError, '. Angle Bias: ', angleBias),
-         x='Longitude', y='Latitude') + theme(plot.title=element_text(hjust=.5))
-  if(like) {
-    # browser()
-    driftLike <- likeDf(nAngles=numGrid, nRates=numGrid, boat=boat, start=start, sd=modelSd) %>%
-      arrange(desc(Value)) %>% mutate(Value = Value/nrow(boat))
-    debugPoints <- data.frame(Angle = c(initDrift$Angle[1], drift$bearing[1], driftLike$Angle[1], bearing),
-                              Rate = c(initDrift$Rate[1], drift$rate[1], driftLike$Rate[1], rate),
-                              Name = c('Initial', 'Drift Estimate', 'Grid Estimate', 'Actual'))
-    contours <- sapply(c(.5,1:3), function(x) log(dnorm(x*modelSd, 0, modelSd)))
-    likePlot <- ggplot() + geom_tile(data=driftLike, aes(x=Angle, y=Rate, fill=Value)) +
-      scale_fill_gradientn(colors=viridis(256)) +
-      coord_cartesian(xlim=c(0,360), ylim=c(0,3), expand=FALSE) +
-      geom_contour(data=driftLike, aes(x=Angle, y=Rate, z=Value),
-                   breaks=contours[1], color='black', size=1) +
-      geom_contour(data=driftLike, aes(x=Angle, y=Rate, z=Value),
-                   breaks=contours[2], color='green', size=2) +
-      geom_contour(data=driftLike, aes(x=Angle, y=Rate, z=Value),
-                   breaks=contours[3], color='darkgreen', size=2) +
-      geom_contour(data=driftLike, aes(x=Angle, y=Rate, z=Value),
-                   breaks=contours[4], color='red', size=2) +
-      geom_point(data=debugPoints, aes(x=Angle, y=Rate, color=Name), size=3)
-    drift$Like <- head(driftLike)
-    drift$Contours <- contours
-  }
-  boat <- mutate(boat, DrawBearing = (DIFARBearing - median(boat$DIFARBearing)) %% 360,
-                 DrawBearing = ifelse(abs(DrawBearing) > 180, DrawBearing - 360, DrawBearing))
-  anglePlot <- ggplot(boat, aes(x=DIFARBearing)) + geom_histogram(binwidth=2) + xlim(0,360) +
-    labs(title='Angles Used for Calibration') + theme(plot.title=element_text(hjust=.5))
-  if(plot) {
-    if(debug) {
-      drift$Init <- head(initDrift)
-      miniLikePlot <- ggplot(initDrift, aes(x=Angle, y=Rate, z=Value, fill=Value)) + geom_tile() +
-        scale_fill_gradientn(colors=viridis(5)) +
-        coord_cartesian(xlim=c(0,360), ylim=c(0,3), expand=FALSE)
-    }
-    if(like & debug) {
-      print(gridExtra::grid.arrange(boatPlot, anglePlot, miniLikePlot, likePlot, nrow=2))
-    } else if(like) {
-      print(gridExtra::grid.arrange(boatPlot, anglePlot, likePlot, nrow=2))
-    } else if(debug) {
-      print(gridExtra::grid.arrange(boatPlot, anglePlot, miniLikePlot, nrow=2))
-    } else {
-      print(gridExtra::grid.arrange(boatPlot, anglePlot, nrow=1))
-    }
-  }
-  drift$Range <- c(range(boat$DrawBearing), range(boat$DrawBearing)[2] - range(boat$DrawBearing)[1])
-  drift
-}
 
 # Distance dist function
 distanceDistribution <- function(boat, start, rate=.7, bearing=130, angleError=5, angleBias=0, reps=20, time=60*60) {
@@ -305,8 +225,11 @@ distanceDistribution <- function(boat, start, rate=.7, bearing=130, angleError=5
   driftLike <- likeDf(boat=boat, start=start, nRates=reps, nAngles=reps, sd=10) %>%
     arrange(desc(Value)) %>% mutate(Value = exp(Value))
   endPoints <- mapply(swfscMisc::destination, start$Latitude, start$Longitude, driftLike$Angle,
-                                     distance = driftLike$Rate*time/3600)
+                                     distance = driftLike$Rate*time/3600, units='km')
   distances <- mapply(distance, endPoints[1,1], endPoints[2,1], endPoints[1,], endPoints[2,], units='km')
   driftLike %>% mutate(Latitude=endPoints[1,], Longitude=endPoints[2,], Distance=distances)
+  # endPoints <- geosphere::destPoint(c(start$Longitude, start$Latitude), driftLike$Angle, driftLike$Rate*time/3.6)
+  # distances <- geosphere::distGeo(endPoints, endPoints[1,])
+  # driftLike %>% mutate(Latitude=endPoints[,2], Longitude=endPoints[,1], Distance = distances)
 }
 
