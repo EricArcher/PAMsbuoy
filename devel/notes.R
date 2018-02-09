@@ -121,3 +121,13 @@
 
 ## LATERRRRR
 # Shiny for the layman
+
+# Drift - normalize each distance bin because each bin really corresponds to a ring on concecntric circles
+# further ones have much more area.
+## This isnt really true. Simulated with normals on x,y and it works out the way it should without
+# trying to normalize them. My expectations were wrong - in my sims that didnt make sense the buoy had
+# only been moving for 9 minutes @ .7 km/hour. It isn't long enough to see much movement (under assumption
+# of error of 7). If the boat is slower it works out just fine.
+# i think i'm happy with drift. Should be a good enough measure of 'do we have the data to measure drift'
+# Can we reduce the cap from 3 to 2? What is an unreasonable drift rate?
+# Will be tricky to come up with 'when is this good.' probably based on relation to predicted rate.

@@ -36,13 +36,13 @@ driftCalibration(list(position=start, calibration=boatLines))
 
 
 realRate <- .7; realBearing <- 130
-angleBias <- 0; angleError <- 7; modelSd <- 7
+angleBias <- 0; angleError <- 10; modelSd <- 7
 
 testDat <- makeCircle(start=start, center=start, distance=1, angles=seq(from=0, to=360, length.out=50), boatKnots=10)
 testit(testDat, start, realRate, realBearing, plot=TRUE, like=TRUE, debug=FALSE, numInit = 12, numGrid=50,
        angleError=angleError, angleBias=angleBias, modelSd=modelSd)
 
-testDat <- makeLines(start=start, distances=c(2,2), boatKnots=10, angle=90, turn=160, nPoints=c(50,50))
+testDat <- makeLines(start=start, distances=c(1.5,1.5), boatKnots=4, angle=90, turn=160, nPoints=c(10,10))
 set.seed(12345)
 testit(testDat, start, realRate, realBearing, plot=TRUE, like=TRUE, debug=FALSE, numInit = 12, numGrid=50,
        angleError=angleError, angleBias=angleBias, modelSd=modelSd)
@@ -54,7 +54,7 @@ testitbias(testDat, start, realRate, realBearing, plot=TRUE, like=FALSE, debug=F
        angleError=angleError, angleBias=angleBias, modelSd=modelSd)
 
 driftSims <- do.call(rbind, lapply(1:100, function(x) {
-  drift <- testit(testDat, start, realRate, realBearing, plot=FALSE, like=FALSE, debug=FALSE, numInit = 50, numGrid=30,
+  drift <- testit(testDat, start, realRate, realBearing, plot=FALSE, like=FALSE, debug=FALSE, numInit = 40, numGrid=30,
          angleError=angleError, angleBias=angleBias, modelSd=modelSd)
   data.frame(Rate=drift$rate, Bearing = drift$bearing, RateErr=drift$err[1], BearingErr=drift$err[2]) %>%
     mutate(RateCI2 = (abs(Rate-realRate) < 2*RateErr), BearingCI2 = (abs(Bearing-realBearing) < 2*BearingErr))
@@ -122,3 +122,7 @@ ggplot(distSummary, aes(x=Distance, y=Like, fill=CI)) + geom_col(alpha=.5, posit
 
 ggplot(distSummary, aes(x=Distance, y=CumLike)) + geom_line()
 
+
+##### Examples
+# More time - 24 minutes, ~ 280 meters
+# Less time - 9 minutes, ~ 115 metres

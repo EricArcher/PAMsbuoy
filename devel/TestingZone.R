@@ -209,4 +209,14 @@ for(i in 1:4) {
 }
 gridExtra::grid.arrange(plist[[1]], plist[[2]], plist[[3]], plist[[4]], nrow=2)
 
-
+# How far
+sixBuoys <- read.csv('../SonoBuoy/Data/PAST_20170620/Data/spot_messages.csv') %>%
+  mutate(UTC=mdy_hm(datetime))
+ggplotly(
+  ggplot(sixBuoys, aes(x=Longitude, y=Latitude, color=UTC)) + geom_point()
+)
+# 8:42 to 15:57
+sixBuoys <- filter(sixBuoys, UTC < ymd_hm('2017-06-20 15:57'), UTC > ymd_hm('2017-06-20 08:40'))
+ggplotly(
+  ggplot(sixBuoys, aes(x=Longitude, y=Latitude, color=UTC)) + geom_point()
+)

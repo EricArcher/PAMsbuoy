@@ -159,7 +159,7 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
       geom_vline(data=maxCI[-4,], aes(xintercept=Max, color=CI), size=2, show.legend=FALSE) +
       scale_color_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
       scale_fill_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
-      coord_cartesian(xlim=c(0,1), expand=FALSE) +
+      coord_cartesian(xlim=c(0,maxCI$Max[2]+.8), expand=FALSE) +
       scale_x_continuous(breaks=c(0, maxCI$Max[1:3]))
     # endPoints <- geosphere::destPoint(c(start$Longitude, start$Latitude), driftLike$Angle, driftLike$Rate*time/3.6)
     # distances <- geosphere::distGeo(endPoints, endPoints[1,])
@@ -188,7 +188,7 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
       #              breaks=c(.1, .5, 1, 1.5, 2)) +
       geom_point(data=debugPoints, aes(x=Angle, y=Rate, color=Name), size=3) +
       geom_segment(data=errPoints, aes(x=StartAngle, y=StartRate, xend=EndAngle, yend=EndRate), size=rep(2:1,2), alpha=.5)
-    drift$Like <- head(driftLike)
+    drift$Like <- driftLike
     drift$Contours <- contours
   }
   boat <- mutate(boat, DrawBearing = (DIFARBearing - median(boat$DIFARBearing)) %% 360,
