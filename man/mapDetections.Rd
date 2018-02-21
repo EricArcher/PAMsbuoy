@@ -5,7 +5,7 @@
 \title{Create a Map Showing Numbers of Detections}
 \usage{
 mapDetections(detectionData, species = "all", combine = TRUE,
-  value = "NumDetections", map = NULL, size = 3, nrow = 1,
+  value = "NumDetections", map = NULL, size = 3, ncol = 3,
   palette = "Reds", nGroups = 6, grouping = "Station")
 }
 \arguments{
@@ -26,7 +26,7 @@ getMap function. Can be included to reduce calls to getMap.}
 
 \item{size}{Size of points to be plotted}
 
-\item{nrow}{number of rows when plotting multiple species}
+\item{ncol}{number of columns when plotting multiple species}
 
 \item{palette}{color palette to be used, see brewer.pal for more info}
 
