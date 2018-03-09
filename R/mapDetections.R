@@ -14,7 +14,7 @@
 #' @param map Optional, a ggmap object to plot on. If left as NULL, will be created by the
 #'    getMap function. Can be included to reduce calls to getMap.
 #' @param size Size of points to be plotted
-#' @param nrow number of rows when plotting multiple species
+#' @param ncol number of columns when plotting multiple species
 #' @param palette color palette to be used, see brewer.pal for more info
 #' @param nGroups the number of different groups to use for coloring. Groups will be
 #'    evenly spaced between 0 and max number of detections.
@@ -29,7 +29,7 @@
 #' @export
 #'
 mapDetections <- function(detectionData, species='all', combine=TRUE, value='NumDetections', map=NULL,
-                          size=3, nrow=1, palette='Reds', nGroups=6, grouping='Station') {
+                          size=3, ncol=3, palette='Reds', nGroups=6, grouping='Station') {
   detectionData$PlotMe <- detectionData[[value]]
   detectionData <- if(all(species %in% 'all')) {
     detectionData
@@ -76,7 +76,7 @@ mapDetections <- function(detectionData, species='all', combine=TRUE, value='Num
   }
 
   g <- detectionMap + geom_point(data=mapData, aes(x=Longitude, y=Latitude, color=Breaks, shape=Count==0), size=size) +
-    facet_wrap(~Species, nrow=nrow) +
+    facet_wrap(~Species, ncol=ncol) +
     scale_color_manual(values=usePalette, labels=haveLabels) +
     scale_shape_manual(values=c('FALSE'=16, 'TRUE'=4), guide=FALSE) +
     labs(x='Longitude', y='Latitude', color='Detections') +

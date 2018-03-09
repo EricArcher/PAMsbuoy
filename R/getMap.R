@@ -56,10 +56,10 @@ getMap <- function(positions, force=FALSE, zoom=10, center=NULL, quiet=FALSE) {
     boundLat[2] > mapRange[3])) {
     # statement mostly useful for debugging
     # cat('Zoom level', zoom, 'is too close. Trying', zoom-1,'. \n')
-    return(getMap(positions, force, zoom-1))
+    return(getMap(positions, force, zoom-1, quiet=quiet))
   }
   if(!quiet) {
-    cat('Zoom level', zoom, 'being used.')
+    cat('Zoom level', zoom, 'being used. \n')
   }
   ggmap(map)
 }

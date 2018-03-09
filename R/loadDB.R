@@ -38,22 +38,13 @@ loadDB <- function(fname, verbose = FALSE) {
     stop(paste("Some necessary tables are missing. ", # in database ", fname,'. \n',
                'Missing tables are: ', paste(criticalTables[!(criticalTables %in% names(db))], collapse=' ')))
   }
-  # These aren't critical to all the setup, just used for effort on/off
-  usefulTables <- c('Listening_Effort', 'Spectrogram_Annotation')
+  # These aren't critical to all the setup, just used for effort on/off and station info
+  usefulTables <- c('Listening_Effort', 'Spectrogram_Annotation', 'Deploy', 'Sound_Acquisition')
   if(!all(usefulTables %in% names(db))) {
     missing <- usefulTables[!(usefulTables %in% names(db))]
     message(paste('Some useful tables are missing. ', # in database ', fname, '. \n',
                   'Missing tables are: ', paste(missing, collapse=' ')))
-    # If they are missing just create empty DFs with all the columns we might look up later so it doesnt die
-    for(m in missing) {
-      neededCols <-c('Status', 'Channels', 'Note', 'UTC', 'Duration')
-      db[[m]] <- data.frame(matrix(ncol=length(neededCols), nrow=0))
-      colnames(db[[m]]) <- neededCols
-    }
   }
-
-  db$Listening_Effort$Status <- tolower(str_trim(db$Listening_Effort$Status))
-  db$DIFAR_Localisation$Species <- tolower(str_trim(db$DIFAR_Localisation$Species))
 
   if(verbose) print(str(db))
   invisible(db)

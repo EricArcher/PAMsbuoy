@@ -23,5 +23,11 @@ Imports:
     tools,
     ggmap,
     ggplot2,
-    RColorBrewer
+    RColorBrewer,
+    webshot,
+    knitr,
+    kableExtra,
+    rmarkdown,
+    utils,
+    geosphere
 RoxygenNote: 6.0.1

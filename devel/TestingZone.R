@@ -10,7 +10,8 @@ db <- loadDB('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/1647_SB
 db <- loadDB('../SonoBuoy/Data/PAST_20170620/PAST20Jun2017_pg11511_sbExperiment DIFAR - Circles.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_PB_Edited.sqlite3')
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
-db <- loadDB('../SonoBuoy/Data/HICEAS_2017/Sette/Database/1706_pg11511_sb_10_20170722.sqlite3')
+db <- loadDB('../SonoBuoy/Data/HICEAS_2017/Sette/Database/1706_pg11511_sb_opp_20170924.sqlite3')
+db <- loadDB('../SonoBuoy/Data/HICEAS_2017/Sette/Database/1706_pg11511_sb_40_20170924.sqlite3')
 db <- loadDB('./devel/final db formatting/FinalFormat_Station2.sqlite3')
 
 buoyPos <- data.frame(Buoy = '1', UTC='2014-08-08 03:19:27',
@@ -126,7 +127,7 @@ db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_VesselCalOnly.sqlite3')
 difarTest <- formatStation(db, buoyPositions = spots)
 
 db <- loadDB('../SonoBuoy/Data/PAST_20160607_POST_PB_Edited.sqlite3')
-db$DIFAR_Localisation$Species <- 'vessel'
+db$DIFAR_Localisation$Species[sample(1:nrow(db$DIFAR_Localisation), 200)] <- 'vessel'
 difarTest <- formatStation(db, buoyPositions = spots)
 # db$HydrophoneStreamers$DifarModuleAction <- 'deployed'
 
@@ -142,10 +143,11 @@ finalDifar <- finalDifar %>%
 firstStation <- formatStation(db, buoyPositions = spots)
 testStation <- firstStation
 
+# Breaks with too many points -
 for(b in 1:4) {
-  testStation$buoys[[b]]$calibration <- finalDifar %>% filter(Buoy==b-1)
-
+  testStation$buoys[[b]]$calibration <- finalDifar %>% filter(Buoy==b-1) %>% head(50) %>% sample_n(10)
 }
+
 # Add some bias
 testStation$buoys$`3`$calibration$DIFARBearing <- testStation$buoys$`3`$calibration$DIFARBearing +
   rnorm(nrow(testStation$buoys$`3`$calibration), 10, 10)
@@ -220,3 +222,118 @@ sixBuoys <- filter(sixBuoys, UTC < ymd_hm('2017-06-20 15:57'), UTC > ymd_hm('201
 ggplotly(
   ggplot(sixBuoys, aes(x=Longitude, y=Latitude, color=UTC)) + geom_point()
 )
+
+
+#### the fuck happened
+v1 <- -2; v2 <- -3
+x <- exp(v1); y <- exp(v2)
+x/(x+y); y/(x+y)
+
+t <- 1:2
+for(i in t) {
+  if(2>t[i] |
+     1<t[3]) {
+    print('heyyy')
+  }
+}
+test$Cruise[1:20] <- 'Yeahhhh'
+
+# including 5 from vessel buts and 4 from vessel anus
+myVes <- levels(as.factor(test$Cruise))
+sapply(myVes, function(v) {
+  num <- test %>% filter(Cruise==v) %>% distinct(Buoy, Station) %>% nrow()
+  paste0(num, ' from vessel ', v)
+}
+) %>% formatListGrammar()
+test %>% group_by(Cruise) %>% distinct(Buoy, Station) %>% summarise(n())
+
+calStations$`1647_SB_S4S5s.sqlite3`$buoys$`0`$BuoyQuality
+
+summary(factor(unlist(lapply(calStations, function(s) {
+  lapply(s$buoys, function(b) {
+    if(is.na(b$info$BuoyQuality)) {
+      'None'
+    } else b$info$BuoyQuality
+  })
+})), levels=c('Good', 'Bad', 'Questionable', 'None')))
+
+
+kable(select(detSummary, -Station),  align='c', digits=2,
+      col.names=myColumns[2:6], escape=FALSE, format='html') %>%
+  kable_styling('bordered') %>%
+  row_spec(odds, background='#edf0f4') %>%
+  group_rows(index=id) %>%
+  collapse_rows(1)
+
+myTable <- PAMsbuoy:::makeHtmlTable(testSum)
+tmp <- tempfile('tmpTable', fileext = '.html')
+rmarkdown::render(system.file('templates/tableTemplate.Rmd', package='PAMsbuoy')
+                  , tmp, output_format='html_document', quiet=TRUE)
+webshot::webshot(tmp, file='wut.png', cliprect=c(0, 0, 1000, 3000))
+
+# 58 header, 37 group head and row
+
+# wincruz
+# Event 'S' is first sight. Spps have species, summarise below. Sight should be number.
+windas <- swfscMisc::das.read('./devel/wincruz/CalC1647.das')
+swfscMisc::das.spp.freq(windas)
+# spcode .dat file is a fwf
+spp <- read.fwf('./devel/wincruz/SpCodes_2013.dat',
+                widths=c(4, 11, 39), stringsAsFactors=FALSE)
+colnames(spp) <- c('Code', 'ShortName', 'ScientificName')
+spp <- mutate(spp, Code = str_trim(Code),
+              ShortName = str_trim(ShortName),
+              ScientificName = str_trim(ScientificName))
+
+windas %>% filter(!is.na(Sight) & !is.na(Spp1)) %>% head() %>%
+  mutate(test=paste0(Spp1, Spp2, Spp3, sep=','), test=gsub('NA', '', test)) %>%
+  str()
+win <- windas %>% filter(!is.na(Sight) & !is.na(Spp1)) %>%
+  select(Code = Spp1, SightingId = Sight) %>% distinct()
+
+setSum %>% mutate(SightingId = as.numeric(SightingId)) %>%
+  left_join(win) %>% left_join(spp) %>% select(-UTC, -Station, -StationType, -Longitude) %>%
+  data.frame() %>% head()
+
+stationInfo <- data.frame(cruise=NA, instrument_type=NA,
+                          instrument_id=NA, station_type=NA, vis_id=NA)
+
+load('calStations.Rdata')
+calStations <- lapply(calStations, function(s) {
+  s$stationInfo <- stationInfo
+  s$detections$CalibrationValue <- rep(NA, nrow(s$detections))
+  s$detections$CalibratedBearing <- rep(NA, nrow(s$detections))
+  s$buoys <- lapply(s$buoys, function(b) {
+    b$info <- list(BuoyQuality = NA,
+                   CalibrationType = NA,
+                   Drift = NA)
+    b
+  })
+  s
+})
+attr(calStations, 'survey') <- 'CalCurCEAS'
+
+test <- 1:20
+t <- c('stationList$Station1', 'stationList[1:10]', 'stationList[c(1,4,6)]')
+splits <- str_split(t, '[\\$\\[]')
+splits
+eval(parse(text=gsub(']', '', splits[[3]][2])))
+test[eval(parse(text=splits[[3]][2]))]
+
+library(PamBinaries)
+bintest <- loadPamguardBinaryFile(file.choose())
+
+test <- data.frame(x=1:8, y=10:17, z=letters[1:8])
+ggplot(test, aes(x=x, y=y)) + geom_point(aes(color=z), size=5) +
+  scale_color_manual(values=c("#000000", "#E69F00", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7", '#000000'))
+c("#000000", "#E69F00", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# dark green is 4. black 1. 6 dark blue 7 dark orange
+colorTest <- c("#000000", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+colorPalette <- c("#000000","#009E73", "#0072B2", "#D55E00", "#F0E442", "#CC79A7")
+colorNames <- c('Black', 'Green', 'Blue', 'Orange', 'Yellow', 'Pink')
+colorTest <- rep(colorTest,2)
+topEight <- filter(setSum, Station %in% unique(setSum$Station)[1:4])
+mapTest <- getMap(topEight)
+mapTest + geom_point(data=topEight, aes(x=Longitude, y=Latitude, color=Station), size=5) +
+  scale_color_manual(values=colorTest, labels=colorNames)

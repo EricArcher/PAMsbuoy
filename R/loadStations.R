@@ -24,11 +24,14 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
   fnames <- fnames[order(nchar(fnames), fnames)]
   error <- FALSE
   # need to wrap this in a try, otherwise if theres an error we dont close the sink connection
+  cat('Loading stations... \n')
+  pb <- txtProgressBar(min=0, max=length(fnames), style=3)
   try({
     st.list <- sapply(seq_along(fnames), function(f) {
-    if((f %% 10)==1 | f == length(fnames)) {
-      cat('Loading station ', f, ' of ', length(fnames),'. \n')
-    }
+    # if((f %% 10)==1 | f == length(fnames)) {
+    #   cat('Loading station ', f, ' of ', length(fnames),'. \n')
+    # }
+    setTxtProgressBar(pb, f)
     message(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", fnames[f])
     station <- formatStation(loadDB(fnames[f], FALSE), overrideError = TRUE, ...)
     for(b in seq_along(station$buoys)) {

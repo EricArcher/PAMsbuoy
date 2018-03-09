@@ -18,7 +18,11 @@ detectionSummary <- function(stationList) {
       buoyDat <- b$position[1,]
       buoyDat$Station <- gsub('(.*)\\..*', '\\1', attr(s, 'station'))
       buoyDat
-    }))
+    })) %>%
+      mutate(StationType = s$stationInfo$station_type,
+             Cruise = s$stationInfo$cruise,
+             SightingId = as.numeric(s$stationInfo$vis_id),
+             RecordingLength = s$stationInfo$recordingLength)
   }))
   # Then match it to detections. This is so we can easily identify 0 detection scenarios.
   detectionData <- do.call(rbind, lapply(stationList, function(s) {
@@ -28,6 +32,9 @@ detectionSummary <- function(stationList) {
   rownames(detectionData) <- c()
   # Identify all species we have. Might want to adjust this to try and match calls or whatever
   specList <- unique(detectionData$Species)
+  if(length(specList)==0) {
+    specList <- 'NONE'
+  }
   detSummary <- do.call(rbind, by(buoyPositions, buoyPositions$Station, function(st) {
     for(sp in specList) {
       for(i in 1:nrow(st)) {
@@ -46,5 +53,7 @@ detectionSummary <- function(stationList) {
     mutate_('USpecies' = ~ gsub('unique_', '', USpecies)) %>%
     filter_('USpecies==Species') %>% select_('-USpecies') %>%
     rename_(.dots = setNames(c('Count', 'UniqueCount'), c('NumDetections', 'UniqueDetections'))) %>%
-    arrange_(.dots = c('Station', 'Species'))
+    group_by(Station) %>% mutate(mn=min(UTC)) %>%
+    arrange_(.dots = c('mn', 'Station', 'Species')) %>%
+    ungroup() %>% select(-mn)
 }

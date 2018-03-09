@@ -2,28 +2,22 @@
 % Please edit documentation in R/applyCalibration.R
 \name{applyCalibration}
 \alias{applyCalibration}
-\alias{magneticAngleCalibration}
-\alias{medianAngleCalibration}
 \title{Apply Bearing Calibration}
 \usage{
-applyCalibration(angle.data, buoy.data, method = c("magnetic", "median",
-  "sine"), ...)
-
-magneticAngleCalibration(angle.data, buoy.data)
-
-medianAngleCalibration(angle.data, buoy.data)
+applyCalibration(stationList, myStations, recalibrate = FALSE, method = "",
+  ...)
 }
 \arguments{
-\item{angle.data}{data.frame containing a \code{Buoy} column and a
-\code{DIFARBearing} column with uncalibrated angle data}
-
-\item{buoy.data}{list of data.frames containing buoy calibration data}
-
 \item{method}{method of angle calibration to use. \code{magnetic} uses
 the median of magnetic varation values. \code{median} uses the median
 of offset angles. \code{sine} uses sinusoidal fit to error.}
 
 \item{\dots}{arguments passed on to other functions}
+
+\item{angle.data}{data.frame containing a \code{Buoy} column and a
+\code{DIFARBearing} column with uncalibrated angle data}
+
+\item{buoy.data}{list of data.frames containing buoy calibration data}
 }
 \description{
 Return calibrated DIFAR angles using different methods

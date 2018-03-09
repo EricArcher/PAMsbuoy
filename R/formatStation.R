@@ -20,13 +20,14 @@
 #' @importFrom dplyr mutate select arrange filter rename bind_rows bind_cols select_
 #' @importFrom magrittr %>%
 #' @importFrom purrr transpose
-#' @importFrom stringr str_trim
+#' @importFrom stringr str_trim str_replace_all
 #' @importFrom tidyr spread
 #' @importFrom stringdist stringsim
 #' @export
 #'
 formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
                           dateFormat = '%Y-%m-%d %H:%M:%S', ...) {
+  db$DIFAR_Localisation$Species <- tolower(str_trim(db$DIFAR_Localisation$Species))
   dbPositions <- formatBuoyPosition(db)
   # buoyPositions either not supplied, supplied as df, or as file path
   if(is.character(buoyPositions)) {
@@ -74,6 +75,8 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
   }
   names(error) <- buoyList
 
+  info <- formatBuoyInfo(buoyList)
+
   missing.positions <- setdiff(buoyList, names(position))
   if(length(missing.positions) > 0) {
     message('**CRITICAL: Missing deployment position information for buoy(s) ',
@@ -116,7 +119,8 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
   buoyTemp <- list(
     position = position,
     calibration = calibration,
-    effort = effort)
+    effort = effort,
+    info = info)
   # Dont really want to carry this around if we dont have to. Used for checking in loadStations
   if(overrideError) {
     buoyTemp$error <- error
@@ -142,7 +146,11 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
       buoys <- buoys[order(names(buoys))]
     }
   }
-  st <- list(buoys = buoys, detections = detections)
+
+  # extra station info
+  stationInfo <- formatStationInfo(db)
+
+  st <- list(buoys = buoys, detections = detections, stationInfo = stationInfo)
 
   attr(st, "station") <- attr(db, "station")
   st
@@ -185,6 +193,18 @@ formatBuoyEffort <- function(db) {
   buoys <- sort(unique(db$DIFAR_Localisation$Channel))
   buoys <- union(buoys, sort(unique(db$HydrophoneStreamers$StreamerIndex)))
 
+  # Check if we have Spectrogram and Effort tables, if we dont make a blank
+  if(!('Spectrogram_Annotation' %in% names(db))) {
+    db$Spectrogram_Annotation <- data.frame(UTC=numeric(),
+                                            Channels=integer(),
+                                            Note=character(),
+                                            Duration=numeric())
+  }
+  if(!('Listening_Effort' %in% names(db))) {
+    db$Listening_Effort <- data.frame(UTC=numeric(),
+                                      Channels=integer(),
+                                      Status=character())
+  }
   # identify noise Notes
   db$Spectrogram_Annotation <- db$Spectrogram_Annotation %>%
     mutate(
@@ -215,6 +235,7 @@ formatBuoyEffort <- function(db) {
     select(-Duration)
 
   eff <- db$Listening_Effort %>%
+    mutate(Status = tolower(str_trim(Status))) %>%
     filter(Status %in% c("on effort", "off effort")) %>%
     arrange(UTC) %>%
     select(UTC, Status, Channels)
@@ -318,7 +339,8 @@ formatBuoyEffort <- function(db) {
 #'
 formatDetections <- function(db, buoys, extraCols = NULL) {
   keepCols <- c('detection', 'Buoy', 'UTC', 'DIFARBearing', 'ClipLength',
-                'DifarFrequency', 'SignalAmplitude', 'DifarGain', 'Species')
+                'DifarFrequency', 'SignalAmplitude', 'DifarGain', 'Species',
+                'CalibrationValue', 'CalibratedBearing')
   if(!is.null(extraCols) & all(extraCols %in% colnames(db$DIFAR_Localisation))) {
     keepCols <- c(keepCols, extraCols)
   }
@@ -328,7 +350,9 @@ formatDetections <- function(db, buoys, extraCols = NULL) {
       Buoy = as.character(Channel),
       MatchedAngles = gsub(" ", "", MatchedAngles)
     ) %>%
-    mutate(detection = labelDetection(.)) %>%
+    mutate(detection = labelDetection(.),
+           CalibrationValue = NA,
+           CalibratedBearing = NA) %>%
     select_(.dots = keepCols) %>%
     arrange(detection, Buoy, UTC)
 
@@ -372,6 +396,54 @@ formatDetections <- function(db, buoys, extraCols = NULL) {
   bind_cols(detections, effort.status)
 }
 
+formatStationInfo <- function(db) {
+  # Rename station_type from DB values to words
+  rename <- c('de'='DensityEstimate',
+              'opp'='Opportunistic')
+  deployInfo <- db$Deploy
+  if(is.null(deployInfo) || (nrow(deployInfo) == 0)) {
+    message('  no station metadata found in the "Deploy" table')
+    # Fill with blanks so we can see this in summaries and such
+    deployInfo <- data.frame(cruise=NA, instrument_type=NA,
+                              instrument_id=NA, station_type=NA, vis_id=NA)
+  } else {
+    deployInfo <- deployInfo %>%
+      mutate(cruise = str_trim(cruise),
+             instrument_type = tolower(str_trim(instrument_type)),
+             instrument_id = str_trim(instrument_id),
+             station_type = tolower(str_trim(station_type)),
+             station_type = str_replace_all(station_type, rename),
+             vis_id = str_trim(vis_id)) %>%
+      select(cruise, instrument_type, instrument_id, station_type, vis_id)
+  }
+  soundInfo <- db$Sound_Acquisition %>%
+    arrange(desc(duration)) %>%
+    slice(1)
+  if(is.null(soundInfo) || (nrow(soundInfo) == 0)) {
+    message('  no sound recording data found in the "Sound_Acquisition" table')
+    soundInfo <- data.frame(sampleRate = NA,
+                            recordingLength = NA,
+                            recordingSystem = NA)
+  } else {
+    soundInfo <- soundInfo %>%
+      mutate(recordingLength = duration,
+             recordingSystem = str_trim(SystemType)) %>%
+      select(sampleRate, recordingLength, recordingSystem)
+  }
+  cbind(deployInfo, soundInfo)
+}
+
+formatBuoyInfo <- function(buoyList) {
+  info <- vector('list', length=length(buoyList))
+  for(b in seq_along(buoyList)) {
+    info[[b]] <- list(BuoyQuality = NA,
+                    CalibrationType = NA,
+                    Drift = list(rate = NA, bearing = NA, stderr = NA,
+                                 errorPlot = NA, mapPlot = NA, Quality = NA))
+  }
+  names(info) <- buoyList
+  info
+}
 #' @rdname formatStation
 #' @keywords internal
 #'

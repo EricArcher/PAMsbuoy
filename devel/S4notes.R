@@ -158,7 +158,7 @@ irisS4 <- function(data, name, date=Sys.time()) {
 ifour <- irisS4(iris, 'Wuggles')
 ifour@name
 
-# Can also do this generic way. Mobetta?
+# Can also do this generic way. Mobetta? (constructor)
 irisS4 <- function(data, ...) UseMethod('irisS4')
 irisS4.data.frame <- function(data, name, date=Sys.time()) {
   new('irisS4', data=data, name=name, date=date)
@@ -168,7 +168,8 @@ irisS4.character <- function(filename, name, date=Sys.time()) {
   irisS4(data, name, date)
 }
 
-plot.irisS4 <- function(x) plot(x@data) # This doesn't work for S4s
+plot.irisS4 <- function(x) plot(x@data) # This doesn't work for S4s.
+# Diff than above because here 'plot' is function, before 'irisS4' was func
 
 setMethod(
   f = 'plot',  # generic to extend
@@ -195,7 +196,7 @@ setGeneric(
   def = function(x, ...) standardGeneric('nrow')
 )
 setMethod('nrow', 'irisS4', function(x) base::nrow(x@data))
-setMethod('nrow', 'default', function(x) base::nrow(x))
+setMethod('nrow', 'default', function(x) base::nrow(x)) # if we forget this then regular nrow breaks b/c 194-7
 nrow(ifour)
 
 # Checking shit is the way it be

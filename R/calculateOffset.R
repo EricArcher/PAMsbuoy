@@ -9,7 +9,7 @@
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
 #' @importFrom stats approx
-#' @importFrom swfscMisc bearing
+#' @importFrom geosphere bearing
 #'
 calculateOffset <- function(calibration, position, db) {
   # loop through buoys in calibration list
@@ -24,19 +24,31 @@ calculateOffset <- function(calibration, position, db) {
     ship.pos <- estimatePosition(b.cal$UTC, db$gpsData)
     # calculate true bearing from buoy to ship for each set of positions
     true.bearing <- if(is.null(buoy.pos)) {
-      matrix(NA, nrow=2, ncol=nrow(ship.pos))
-    } else mapply(
-      bearing,
-      buoy.pos$Latitude, buoy.pos$Longitude,
-      ship.pos$Latitude, ship.pos$Longitude
-    )
+      rep(NA, nrow(ship.pos))
+      # matrix(NA, nrow=2, ncol=nrow(ship.pos))
+    } else {
+      # mapply(
+      # bearing,
+      # buoy.pos$Latitude, buoy.pos$Longitude,
+      # ship.pos$Latitude, ship.pos$Longitude
+      # )
+      geosphere::bearing(cbind(buoy.pos$Longitude, buoy.pos$Latitude),
+                         cbind(ship.pos$Longitude, ship.pos$Latitude))
+    }
+    # Put in placeholders for calibration data. Useful for these to default to NA
+    # for summaries and looking at data
+    CalibrationValue <- rep(NA, nrow(ship.pos))
+    CalibratedBearing <- rep(NA, nrow(ship.pos))
     # add magnetic variation and true bearing to calibration data frame
     b.cal <- cbind(
       b.cal,
       magnetic.variation = ship.pos$MagneticVariation,
-      true.bearing = apply(true.bearing, 2, mean),
+      true.bearing = true.bearing %% 360,
+      # true.bearing = apply(true.bearing, 2, mean),
       BoatLatitude = ship.pos$Latitude,
-      BoatLongitude = ship.pos$Longitude
+      BoatLongitude = ship.pos$Longitude,
+      CalibrationValue,
+      CalibratedBearing
     )
     # calculate offset = true - difar bearing. Make range -180 to 180
     b.cal$offset <- sapply((b.cal$true.bearing - b.cal$DIFARBearing) %% 360, function(x) {

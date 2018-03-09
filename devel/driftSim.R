@@ -36,13 +36,13 @@ driftCalibration(list(position=start, calibration=boatLines))
 
 
 realRate <- .7; realBearing <- 130
-angleBias <- 0; angleError <- 10; modelSd <- 7
+angleBias <- 0; angleError <- 7; modelSd <- 7
 
-testDat <- makeCircle(start=start, center=start, distance=1, angles=seq(from=0, to=360, length.out=50), boatKnots=10)
+testDat <- makeCircle(start=start, center=start, distance=1, angles=seq(from=0, to=100, length.out=10), boatKnots=5)
 testit(testDat, start, realRate, realBearing, plot=TRUE, like=TRUE, debug=FALSE, numInit = 12, numGrid=50,
        angleError=angleError, angleBias=angleBias, modelSd=modelSd)
 
-testDat <- makeLines(start=start, distances=c(1.5,1.5), boatKnots=4, angle=90, turn=160, nPoints=c(10,10))
+testDat <- makeLines(start=start, distances=c(3,3), boatKnots=10, angle=90, turn=160, nPoints=c(15,15))
 set.seed(12345)
 testit(testDat, start, realRate, realBearing, plot=TRUE, like=TRUE, debug=FALSE, numInit = 12, numGrid=50,
        angleError=angleError, angleBias=angleBias, modelSd=modelSd)
@@ -54,13 +54,24 @@ testitbias(testDat, start, realRate, realBearing, plot=TRUE, like=FALSE, debug=F
        angleError=angleError, angleBias=angleBias, modelSd=modelSd)
 
 driftSims <- do.call(rbind, lapply(1:100, function(x) {
-  drift <- testit(testDat, start, realRate, realBearing, plot=FALSE, like=FALSE, debug=FALSE, numInit = 40, numGrid=30,
+  drift <- testit(testDat, start, realRate, realBearing, plot=FALSE, like=TRUE, debug=FALSE, numInit = 30, numGrid=50,
          angleError=angleError, angleBias=angleBias, modelSd=modelSd)
-  data.frame(Rate=drift$rate, Bearing = drift$bearing, RateErr=drift$err[1], BearingErr=drift$err[2]) %>%
+  data.frame(Rate=drift$rate, Bearing = drift$bearing, RateErr=drift$err[1], BearingErr=drift$err[2],
+             CI90=drift$CI90, CI95=drift$CI95, CI99=drift$CI99) %>%
     mutate(RateCI2 = (abs(Rate-realRate) < 2*RateErr), BearingCI2 = (abs(Bearing-realBearing) < 2*BearingErr))
 }))
 
+driftSims <- gather(driftSims, CI, Value, c('CI90', 'CI95', 'CI99'))
+ggplot(driftSims, aes(x=Rate, y=Value*Rate, color=abs(Rate-realRate))) +
+# ggplot(driftSims, aes(y=abs(Rate-realRate), x=Value, color=CI)) +
+  geom_point(size=3, alpha=.7) +
+  geom_vline(xintercept=realRate) + geom_hline(yintercept = 1) +
+  scale_color_gradientn(colors=viridis(256)) +
+  xlim(0,3)
+  # ylim(0,2)
+
 simDiagnostic(start, filter(driftSims, Rate <= 3), realRate, realBearing, 60*60)
+
 
 ggplot(driftSims) +
   geom_histogram(aes(x=Rate), binwidth=.2) + geom_vline(xintercept=2)
@@ -103,26 +114,14 @@ distDist <- distanceDistribution(testDat, start, reps=100, angleError=30, angleB
 #   expectedBearing(boat, start, 1, 1)
 # }
 # Rprof(NULL)
-# summaryRprof(tf)
-
-breakLevel <- .05
-distDist <- distDist %>%
-  mutate(DistBreaks = cut(Distance, seq(0, max(distDist$Distance)+breakLevel, breakLevel), ordered_result = TRUE, include.lowest = TRUE))
-distSummary <- group_by(distDist, DistBreaks) %>% summarise(Like = sum(Value)) %>%
-  mutate(Like=Like/sum(.$Like), CumLike = cumsum(Like), Distance=as.numeric(DistBreaks)*breakLevel,
-         CI=cut(CumLike, c(0,.9,.95,.99, 1), include.lowest=TRUE))
-maxCI <- distSummary %>% group_by(CI) %>% summarise(Max=max(Distance))
-
-ggplot(distSummary, aes(x=Distance, y=Like, fill=CI)) + geom_col(alpha=.5, position=position_nudge(x=-breakLevel/2)) +
-  geom_vline(data=maxCI[-4,], aes(xintercept=Max, color=CI), size=2, show.legend=FALSE) +
-  scale_color_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
-  scale_fill_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
-  coord_cartesian(xlim=c(0,3), expand=FALSE) +
-  scale_x_continuous(breaks=c(seq(0,3,1), maxCI$Max[1:3]))
-
-ggplot(distSummary, aes(x=Distance, y=CumLike)) + geom_line()
-
 
 ##### Examples
 # More time - 24 minutes, ~ 280 meters
 # Less time - 9 minutes, ~ 115 metres
+
+#### REFACTORING AND SHIT TESTING
+start <- data.frame(Latitude=32, Longitude=-117, UTC=as.POSIXct('2017-08-08 08:00:00'), Buoy=0)
+testDat <- makeLines(start=start, distances=c(1.5,1.5), boatKnots=6, angle=90, turn=160, nPoints=c(10,5))
+test <- likeDf(boat=testDat %>% makeDifar(start), start=start)
+
+

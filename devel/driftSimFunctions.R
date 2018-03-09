@@ -103,16 +103,6 @@ simDiagnostic <- function(start, driftData, rate, bearing, time=60*10) {
   grid.arrange(rateHist, bearingHist, distHist, driftPlot, rateErrHist, bearingErrHist, nrow=2)
 }
 
-likeDf <- function(nAngles=60, nRates=30, FUN=driftLogl, boat, start, sd=10) {
-  angles <- seq(0,360, length.out=nAngles)
-  rates <- seq(0, 3, length.out=nRates)
-  do.call(rbind, lapply(rates, function(r) {
-    value <- sapply(angles, function(a) {
-      driftLogl(boat, start, c(r,a),sd)
-    })
-    data.frame(Rate=r, Angle=angles, Value=value)
-  }))
-}
 testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FALSE,
                    numInit=5, numGrid=60, angleError=0, angleBias=0, modelSd = 10, map=FALSE) {
   buoy <- driftBuoy(start, rate, bearing, times=boat$UTC)
@@ -127,8 +117,9 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
   start$endLat <- endPoints[1]; start$endLong <- endPoints[2]
   if(map) {
     boatMap <- getMap(rename(boat, Latitude=BoatLatitude, Longitude=BoatLongitude), zoom=16)
-  } else boatMap <- ggplot()
-  # boatPlot <-ggplot() +
+  } else {
+    boatMap <- ggplot()
+  }
   boatPlot <- boatMap +
     geom_point(data=boat, aes(x=BoatLongitude, y=BoatLatitude, color='Boat Path')) +
     geom_point(data=buoy, aes(x=Longitude, y=Latitude, color='Buoy Path')) +
@@ -142,25 +133,9 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
     driftLike <- likeDf(nAngles=numGrid, nRates=numGrid, boat=boat, start=start, sd=modelSd) %>%
       arrange(desc(Value)) %>% mutate(ExpValue = exp(Value), Value = Value/nrow(boat))
     ### DIST STUFF ###
-    breakLevel <- 0.05
-    time <- 60*60
-    endPoints <- mapply(swfscMisc::destination, start$Latitude, start$Longitude, driftLike$Angle,
-                        distance = driftLike$Rate*time/3600, units='km')
-    distances <- mapply(distance, endPoints[1,1], endPoints[2,1], endPoints[1,], endPoints[2,], units='km')
-    driftLike <- mutate(driftLike, Latitude=endPoints[1,], Longitude=endPoints[2,], Distance=distances,
-                        DistBreaks = cut(Distance, seq(0, max(Distance)+breakLevel, breakLevel), ordered_result = TRUE, include.lowest = TRUE),
-                        ExpValue=ExpValue/sum(driftLike$ExpValue))
-    distSummary <- group_by(driftLike, DistBreaks) %>% summarise(Like = sum(ExpValue)) %>%
-      mutate(Like = Like/sum(.$Like), CumLike = cumsum(Like), Distance=as.numeric(DistBreaks)*breakLevel,
-             CI=cut(CumLike, c(0,.9,.95,.99,1), include.lowest=TRUE))
-    maxCI <- distSummary %>% group_by(CI) %>% summarise(Max=max(Distance))
+    # Comparing distance from endpoint at 1 hour to drift rate
+    distancePlot <- driftErrorPlot(driftLike, boat=boat, start=start)
 
-    distancePlot <- ggplot(distSummary, aes(x=Distance, y=Like, fill=CI)) + geom_col(alpha=.5, position=position_nudge(x=-breakLevel/2)) +
-      geom_vline(data=maxCI[-4,], aes(xintercept=Max, color=CI), size=2, show.legend=FALSE) +
-      scale_color_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
-      scale_fill_manual(values=c('darkgreen', 'orange', 'red', 'red')) +
-      coord_cartesian(xlim=c(0,maxCI$Max[2]+.8), expand=FALSE) +
-      scale_x_continuous(breaks=c(0, maxCI$Max[1:3]))
     # endPoints <- geosphere::destPoint(c(start$Longitude, start$Latitude), driftLike$Angle, driftLike$Rate*time/3.6)
     # distances <- geosphere::distGeo(endPoints, endPoints[1,])
     # driftLike %>% mutate(Latitude=endPoints[,2], Longitude=endPoints[,1], Distance = distances)
@@ -188,7 +163,7 @@ testit <- function(boat, start, rate, bearing, plot=FALSE, like=FALSE, debug=FAL
       #              breaks=c(.1, .5, 1, 1.5, 2)) +
       geom_point(data=debugPoints, aes(x=Angle, y=Rate, color=Name), size=3) +
       geom_segment(data=errPoints, aes(x=StartAngle, y=StartRate, xend=EndAngle, yend=EndRate), size=rep(2:1,2), alpha=.5)
-    drift$Like <- driftLike
+    drift$Like <- driftLike %>% head()
     drift$Contours <- contours
   }
   boat <- mutate(boat, DrawBearing = (DIFARBearing - median(boat$DIFARBearing)) %% 360,

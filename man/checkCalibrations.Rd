@@ -4,20 +4,24 @@
 \alias{checkCalibrations}
 \title{Check Buoy Calibrations}
 \usage{
-checkCalibrations(stationList, recheck = FALSE, goodRange = 10,
-  midFun = median)
+checkCalibrations(stationList, myStations, recalibrate = FALSE,
+  midFun = median, goodRange = 10)
 }
 \arguments{
 \item{stationList}{a list of sonobuoy stations as created by \code{loadStations},
 or a single station as created by \code{formatStation}}
 
-\item{recheck}{should buoys that have already been checked be re-examined? If
+\item{myStations}{IDs of stations to check. Neede for calibrateStations to work correctly}
+
+\item{recalibrate}{should buoys that have already been checked be re-examined? If
 \code{FALSE}, any buoys with existing BuoyQuality will be skipped over.}
+
+\item{midFun}{function to use to show center of the data}
+
+\item{goodRange}{range around center of data to show guidelines for good calibrations}
 }
 \value{
 a list of sonobuoy stations with an added BuoyQuality field for each buoy.
-  Will also directly modify the calStations object even if the result is not
-  assigned to a variable.
 }
 \description{
 Loop through histograms of buoy calibration offsets for each

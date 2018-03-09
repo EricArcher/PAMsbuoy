@@ -45,8 +45,6 @@
 # labelDetection breaks if we have Ids in MatchedAngles that aren't in Id column. No idea how this happened.
 # temp fix for now, will just remove bad Ids from MA and warn you where it happened.
 
-# drift needs to check inputs are proper form otherwise you get weird errors
-
 # Check buoy position stuff (loading PAST_20160607 data). Doesnt seem like error is happening if its missing
 
 # UIDS not loaded ?
@@ -58,9 +56,6 @@
 # 1) Buoy calibration. 2) Buoy drift. 3) Error checking? 4) Format output for models
 # 5) sound source estimation? 6) localization?
 
-#################
-# Create small report on drift stuff for Shannon showing results of simulations
-
 ###### POTENTIAL PROBLEM####
 # NO INTERNET MEANS NO MAPS ####
 # Change getMap - first suppress warning messages when it cant download, then after it fails
@@ -69,9 +64,6 @@
 
 # Report Notes:
 # Captions: have both for figures, none for tables.
-
-# Ask for survey full text name for first [Cruise Name], then also short-hand for later in report.
-# then question For 1705_whatver, what is the vessel name
 
 # PG version: lookup in table (later once it's added), if can't be found then ask. Probably
 # create an info part of station (like buoy, det) to store this.
@@ -84,19 +76,8 @@
 # Table info: want also number of calls only heard on 1 buoy?
 # Collapsing will break if only 1 species or other shit
 
-# Offline maps - ask Eric. Problem - my zooming relies on google bounds. Could have people
-# download some coastfiles or whatever before going out to sea.
-
-#### Drift sim pictures
-# Some examples good and bad - bad error, fewer points
 # Thoughts on drift - it isn't as important to say "is this better" for 1 buoy,
 # we need the relative positions for our secr shit
-
-#####
-# Burstpulseshenanigans
-#####
-# WM detector in PG. Some for actualy whistles, some for BPs. Need to have analytical
-# and detailed method for making one that is good for BP vs WM. High and low BPs
 
 ####
 # Eric Qs
@@ -131,3 +112,26 @@
 # i think i'm happy with drift. Should be a good enough measure of 'do we have the data to measure drift'
 # Can we reduce the cap from 3 to 2? What is an unreasonable drift rate?
 # Will be tricky to come up with 'when is this good.' probably based on relation to predicted rate.
+# Just dividing by rate estimate is sketchy. When we have a small estimate it explodes and looks bad.
+## But is that really bad? That's all we have to go on. It is harder to detect a small rate, so it
+# should be worse when it is msall.
+## Yes it is still bad. If you happen to guess high it looks a lot better than it should
+
+#### PROBLEM ###
+# Need to put in a check for deployment times. First calstation the second deploy time is matched
+# to the first set of calibrations so everything doesnt make sense
+
+## calibrate stations:
+# 1) check calibrations
+# 2) apply calibrations    make sure we check OK. AND report how many had nothing. esp if 'do same all'
+# 3) calculate drift     make sure we check applied. Do we want to have option to just run through,
+# then check later? Takes a long
+
+# if eric has species codes in package use that mo betta
+
+# detsummary is broken if zero detections. Fixed, but createSummaryReport(sette[1:10]) my tables are all fucked
+# up. Colors dont alternate, need to fix the column squishing thing.
+
+# 90% score rev
+
+# Multiple species codes on a single vis id what to do?
