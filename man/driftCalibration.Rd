@@ -4,15 +4,16 @@
 \alias{driftCalibration}
 \title{Estimate Sonobuoy Drift Rate and Direction}
 \usage{
-driftCalibration(buoy.data, initial = c(1, 0), sd = 10, ...)
+driftCalibration(stationList, myStations, recalibrate = FALSE, map = FALSE,
+  ...)
 }
 \arguments{
 \item{buoy.data}{list of data.frames containing buoy calibration and
 position data}
 
-\item{initial}{vector of initial values for optim algorithm in km/h and true bearing}
-
 \item{graph}{flag of whether or not to create likelihood graph for diagnostics}
+
+\item{initial}{vector of initial values for optim algorithm in km/h and true bearing}
 }
 \description{
 Return estimated drift rate and direction of a sonobuoy

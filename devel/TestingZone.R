@@ -337,3 +337,41 @@ topEight <- filter(setSum, Station %in% unique(setSum$Station)[1:4])
 mapTest <- getMap(topEight)
 mapTest + geom_point(data=topEight, aes(x=Longitude, y=Latitude, color=Station), size=5) +
   scale_color_manual(values=colorTest, labels=colorNames)
+
+### Offline maps
+library(rgdal)
+shape_path <- "./inst/coastlines/"
+coast <- paste(shape_path, 'ne_10m_coastline.shp', sep='')
+coast <- paste(shape_path, "ne_110m_coastline.shp", sep="")
+coast <- paste(shape_path, 'ne_50m_coastline.shp', sep='')
+layer <- ogrListLayers(coast)
+ogrInfo(coast, layer=layer)
+coast_lines <- readOGR(coast, layer=layer)
+coastdf <- ggplot2::fortify(coast_lines)
+# Figure out how we want to filter
+# coastdf <- coastdf %>% filter(-130 < long, long < -70, 20 < lat, lat < 30)
+neg <- coastdf %>% filter(long>150) %>% mutate(long=long-360, id=paste0('neg', id), group=paste0('neg', group))
+pos <- coastdf %>% filter(long< -150) %>% mutate(long=long+360, id=paste0('pos', id), group=paste0('pos', group))
+usedf <- rbind(coastdf, neg, pos)
+# usedf <- coastdf %>% select(-group)
+blank <- geom_rect(aes(xmin=-175, xmax=-90, ymin=30, ymax=32), fill=NA)
+basemap <- ggplot() + geom_map(data=usedf, map=usedf, aes(map_id=id), fill="#ece2d9", color='black') +
+  theme(panel.grid = element_blank(),
+        panel.background = element_rect(fill='#A3CCFF'))  + blank
+basemap + expand_limits(x=usedf$long, y=usedf$lat)
+plotme <- setSum
+
+wut <- basemap + geom_point(data=PAMsbuoy:::fixDateline(plotme), aes(x=Longitude, y=Latitude)) +
+  geom_point(data=PAMsbuoy:::fixDateline(calSum), aes(x=Longitude, y=Latitude)) +
+  coord_map()
+bld <- ggplot_build(wut)
+layout <- bld$layout$panel_ranges[[1]]
+asp <- with(layout, (y.proj[2]-y.proj[1])/(x.proj[2]-x.proj[1]))
+test <- basemap + geom_point(data=PAMsbuoy:::fixDateline(plotme), aes(x=Longitude, y=Latitude)) +
+  theme(aspect.ratio=asp) + geom_point(data=PAMsbuoy:::fixDateline(calSum), aes(x=Longitude, y=Latitude))
+test
+usedismap <- basemap + theme(aspect.ratio=asp)
+usedismap + geom_point(data=PAMsbuoy:::fixDateline(plotme), aes(x=Longitude, y=Latitude)) +
+  geom_point(data=PAMsbuoy:::fixDateline(calSum), aes(x=Longitude, y=Latitude))
+wut
+wtf <- ggplot_build(test)$layout$panel_ranges[[1]]

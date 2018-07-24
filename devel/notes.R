@@ -127,11 +127,15 @@
 # 3) calculate drift     make sure we check applied. Do we want to have option to just run through,
 # then check later? Takes a long
 
-# if eric has species codes in package use that mo betta
-
 # detsummary is broken if zero detections. Fixed, but createSummaryReport(sette[1:10]) my tables are all fucked
 # up. Colors dont alternate, need to fix the column squishing thing.
 
 # 90% score rev
 
-# Multiple species codes on a single vis id what to do?
+# Multiple species codes on a single vis id what to do? Add progress. The fuck?
+# Dont label by SightingId, just by ship for opp with no wincruz?
+
+## Anything without unid italicize species. For now, if multiple species detected save as 1 / 2 with
+# separate color for it and such.
+
+# Binary read on hiceas data broke =(

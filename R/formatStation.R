@@ -14,6 +14,8 @@
 #'   the station and mark problematic buoys with \code{error=TRUE}.
 #' @param dateFormat character string giving date-time format as used by strptime. This
 #'   is used to format the dates of data supplied by buoyPositions.
+#' @param extraCols character vector listing any extra columns to keep while loading
+#'   detection data.
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}, Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
@@ -26,7 +28,7 @@
 #' @export
 #'
 formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
-                          dateFormat = '%Y-%m-%d %H:%M:%S', ...) {
+                          dateFormat = '%Y-%m-%d %H:%M:%S', extraCols = NULL, ...) {
   db$DIFAR_Localisation$Species <- tolower(str_trim(db$DIFAR_Localisation$Species))
   dbPositions <- formatBuoyPosition(db)
   # buoyPositions either not supplied, supplied as df, or as file path
@@ -81,11 +83,14 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
   if(length(missing.positions) > 0) {
     message('**CRITICAL: Missing deployment position information for buoy(s) ',
             paste(missing.positions, collapse = ', '), '. \n',
-            '** You must fix in the database or provide as a separate csv file.')
+            '** You must fix in the database or provide as a separate csv file.\n',
+            'If providing a csv file, it must have columns UTC, Buoy, Latitude, Longitude. ',
+            'Dates should be in YYYY-MM-DD H:M:S format (this can be changed with the dateFormat',
+            'argument.')
     if(!overrideError) {
       buoyPositions <- file.choose()
-      return(formatStation(db = db, buoyPositions = buoyPositions,
-                           overrideError = overrideError, dateFormat = dateFormat, ...))
+      return(formatStation(db = db, buoyPositions = buoyPositions, overrideError = overrideError,
+                           dateFormat = dateFormat, extraCols = extraCols, ...))
     } else {
       for(b in missing.positions) {
         position[b] <- list(NULL)
@@ -128,7 +133,7 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
   buoys <- purrr::transpose(buoyTemp)
 
   # a list of each detection
-  detections <- formatDetections(db, buoys, ...)
+  detections <- formatDetections(db, buoys, extraCols)
   missing.detections <- setdiff(unique(detections$Buoy), buoyList)
   if(length(missing.detections) > 0) {
     message('**CRITICAL: Detections are present for buoy(s)',
@@ -137,8 +142,8 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
             '** You must fix in the database or provide deployment position in a separate csv file.')
     if(!overrideError) {
       buoyPositions <- file.choose()
-      return(formatStation(db = db, buoyPositions = buoyPositions,
-                           overrideError = overrideError, dateFormat = dateFormat, ...))
+      return(formatStation(db = db, buoyPositions = buoyPositions, overrideError = overrideError,
+                           dateFormat = dateFormat, extraCols = extraCols, ...))
     } else {
       for(b in missing.detections) {
         buoys[[b]] <- list(error=TRUE)
@@ -405,7 +410,7 @@ formatStationInfo <- function(db) {
     message('  no station metadata found in the "Deploy" table')
     # Fill with blanks so we can see this in summaries and such
     deployInfo <- data.frame(cruise=NA, instrument_type=NA,
-                              instrument_id=NA, station_type=NA, vis_id=NA)
+                              instrument_id=NA, station_type='DensityEstimate', vis_id=NA)
   } else {
     deployInfo <- deployInfo %>%
       mutate(cruise = str_trim(cruise),

@@ -10,7 +10,7 @@
 \title{Format Station Data}
 \usage{
 formatStation(db, buoyPositions = NULL, overrideError = FALSE,
-  dateFormat = "\%Y-\%m-\%d \%H:\%M:\%S", ...)
+  dateFormat = "\%Y-\%m-\%d \%H:\%M:\%S", extraCols = NULL, ...)
 
 formatBuoyPosition(db)
 
@@ -37,6 +37,9 @@ the station and mark problematic buoys with \code{error=TRUE}.}
 
 \item{dateFormat}{character string giving date-time format as used by strptime. This
 is used to format the dates of data supplied by buoyPositions.}
+
+\item{extraCols}{character vector listing any extra columns to keep while loading
+detection data.}
 }
 \description{
 Format data for a station from an list of tables read from

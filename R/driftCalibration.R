@@ -2,17 +2,18 @@
 #' @title Estimate Sonobuoy Drift Rate and Direction
 #' @description Return estimated drift rate and direction of a sonobuoy
 #'
-#' @param buoy.data list of data.frames containing buoy calibration and
-#'   position data
-#' @param graph flag of whether or not to create likelihood graph for diagnostics
-#' @param initial vector of initial values for optim algorithm in km/h and true bearing
+#'@param stationList
 #'
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
 #' @importFrom stats optim
 #' @importFrom geosphere bearing destPoint distGeo
+#' @importFrom viridisLite viridis
 #'
 driftCalibration <- function(stationList, myStations, recalibrate = FALSE, map = FALSE, ...) {
+  if(missing(myStations)) {
+    myStations <- seq_along(stationList)
+  }
   skipCount <- 0
   checkCount <- 0
   qualityOptions <- c('Good', 'Questionable', 'Bad')
@@ -25,7 +26,7 @@ driftCalibration <- function(stationList, myStations, recalibrate = FALSE, map =
     lapply(s$buoys, function(b) {
       if(is.na(b$info$BuoyQuality) ||
          is.na(b$info$CalibrationType) ||
-        (!recalibrate & !is.na(b$info$Drift$Quality))) {
+        (!recalibrate && !is.na(b$info$Drift$Quality))) {
         'Not Checked'
       } else b$info$BuoyQuality
     })
@@ -53,7 +54,7 @@ driftCalibration <- function(stationList, myStations, recalibrate = FALSE, map =
       if(!(thisBuoyData$info$BuoyQuality %in% qualityCheck)) {
         next
       }
-      if(!recalibrate & !is.na(thisBuoyData$info$Drift)) {
+      if(!recalibrate && !is.na(thisBuoyData$info$Drift)) {
         next
       }
 
@@ -70,6 +71,8 @@ driftCalibration <- function(stationList, myStations, recalibrate = FALSE, map =
                     stderr = sqrt(diag(solve(-driftEst$hessian)))))
       drift$errorPlot <- driftErrorPlot(driftLike, start=buoyStart, boat=calibrationData) +
         labs(title = paste0('Estimated Std. Error: ', round(drift$stderr[1], 3)))
+      drift$likePlot <- ggplot(data=driftLike, aes(x=Angle, Rate, fill=Value)) + geom_tile() +
+        scale_fill_gradientn(colors=viridis(256))
       if(map) {
         drift$mapPlot <- driftMapPlot(drift, start=buoyStart, boat=calibrationData)
       }
@@ -80,7 +83,7 @@ driftCalibration <- function(stationList, myStations, recalibrate = FALSE, map =
       setTxtProgressBar(pb, checkCount)
     }
   }
-  cat('Calculated drift for', checkCount, 'buoys total.\n')
+  cat('\nCalculated drift for', checkCount, 'buoys total.\n')
   stationList
 }
 

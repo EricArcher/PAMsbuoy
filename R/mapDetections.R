@@ -85,7 +85,7 @@ mapDetections <- function(detectionData, species='all', combine=TRUE, value='Num
     theme(legend.key = element_rect(fill='#A3CCFF'))
 
   # Re-doing labels in case we have crossed dateline, ie -190 -> +170
-  longLabsOld <- as.numeric(ggplot_build(g)$layout$panel_ranges[[1]]$x.labels)
+  longLabsOld <- as.numeric(ggplot_build(g)$layout$panel_params[[1]]$x.labels)
   longLabsNew <- sapply(longLabsOld, function(x) (x-180) %% 360 - 180)
 
   suppressMessages(g <- g + scale_x_continuous(breaks=longLabsOld, labels=longLabsNew, expand=c(0,0)))

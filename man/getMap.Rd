@@ -5,7 +5,7 @@
 \title{Get a Map of Appropriate Size}
 \usage{
 getMap(positions, force = FALSE, zoom = 10, center = NULL,
-  quiet = FALSE)
+  quiet = FALSE, offline = FALSE, bounds = NULL)
 }
 \arguments{
 \item{positions}{data frame containing columns \code{Latitude} and \code{Longitude}}
@@ -21,6 +21,13 @@ mean of the range of the data. If not \code{NULL} it must be a named vector
 with values \code{lon} and \code{lat}}
 
 \item{quiet}{\code{FALSE} to report zoom level used}
+
+\item{offline}{flag whether or not to run in offline mode. Offline mode will use coastline
+files from naturalearthdata.com and a mercator projection.}
+
+\item{bounds}{optional, the boundaries of a box that must be within the output plot.
+Used to extend the plotted area, especially useful for the offline mode. Specified as
+the lat / long coordinates of the lower left and upper right corners.}
 }
 \description{
 Return a ggmap object centered on the middle of the positions

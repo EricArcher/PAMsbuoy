@@ -49,7 +49,7 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
     message('WARNING: Encountered problems while loading stations. See error log and fix CRITICAL errors.',
             '\n You may need to upload a file of buoy deployment positions. Select a file now, \n',
             ' or cancel and re-run with argument buoyPositions set to missing deployment data. \n',
-            ' Please ensure that the dateFormat argument matches your data (default %Y-%m-%d %H:%M:%S, see strptime for options).')
+            ' Please ensure that the dateFormat argument matches your data (default %Y-%m-%d %H:%M:%S, see ?strptime for options).')
     try({
       buoyPositions <- file.choose()
       return(loadStations(folder=folder, db.ext=db.ext, buoyPositions = buoyPositions, ...))

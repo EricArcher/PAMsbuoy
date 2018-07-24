@@ -11,18 +11,17 @@ output:
 # Make Plots with proper titles
 
 ```
-# `r paste0(cruiseName, ' (', cruiseAbbr, ')')` Sonobuoy Report
+# `r paste0(reportText$cruiseName, ' (', reportText$cruiseAbbr, ')')` Sonobuoy Report
 ### `r format(Sys.time(), format='%a %b %d %Y')`
 
 
-Navy surplus sonobuoys (type-`r sonobuoyType`) were deployed from the survey vessel during `r cruiseAbbr`; this report includes deployments conducted between `r format(min(detSummary$UTC), format='%b %d %Y')` and `r format(max(detSummary$UTC), format='%b %d %Y')` on the vessel(s) `r formatListGrammar(myVessels)`. Sonobuoys were programmed to allow for best performance (Table 1). Sonobuoy signals were received via shipboard antenna cabled to a Winradio sonobuoy receiver (model WR-G39WSBE). Recordings were digitized at a `r round(stationInfo$sampleRate/1000, 0)`
-kHz sampling rate with a `r stationInfo$recordingSystem` and recorded to hard drive using Pamguard software (Pamguard version xxxx, Gillespie et al. 2008). 
+Navy surplus sonobuoys (type-`r reportText$sonobuoyType`) were deployed from the survey vessel during `r reportText$cruiseAbbr`; this report includes deployments conducted between `r format(min(detSummary$UTC), format='%b %d %Y')` and `r format(max(detSummary$UTC), format='%b %d %Y')` on the vessel(s) `r formatListGrammar(reportText$myVessels)`. Sonobuoys were programmed to allow for best performance (Table 1). Sonobuoy signals were received via shipboard antenna cabled to a Winradio sonobuoy receiver (model WR-G39WSBE). Recordings were digitized at a `r reportText$sampleRate`
+kHz sampling rate with a `r reportText$recordingSystem` and recorded to hard drive using Pamguard software (Pamguard version xxxx, Gillespie et al. 2008). 
 
 Detection and localization of calls used the Pamguard DIFAR module (Miller et al. 2014); sonobuoys were calibrated following methods developed by Miller et al. (2014). Calibrations   consisted of [x] number of samples, with each sample consisting of [x] s clips with a minimum interval of [x] s between clips. Classification settings were customized for calibration on vessel noise and for analysis of specific call types (Table 2). 
 
 
-A total of `r nSonobuoys` sonobuoys were deployed at `r nrow(distinct(detSummary, Station))` locations throughout the study area (Fig. 1)`r vesselText` (Table 1).  Deployments included `r nStations` sonobuoy stations and `r nOpportunistic` sonobuoys deployed opportunistically in the presence of sighted cetaceans (Table 1). 
-`r if(nOpportunistic > 0) paste0('Opportunistic sonobuoys included a total of ', round(opportunisticLength/60, 0), ' minutes of recordings during confirmed visual sightings of ', formatListGrammar(oppSpecies), ' (Table 1).')` Acoustic detections included species name 
+A total of `r reportText$nSonobuoys` sonobuoys were deployed at `r nrow(distinct(detSummary, Station))` locations throughout the study area (Fig. 1)`r reportText$vesselText` (Table 1).  Deployments included `r reportText$nStations` sonobuoy stations and `r reportText$nOpportunistic` sonobuoys deployed opportunistically in the presence of sighted cetaceans (Table 1). `r if(reportText$nOpportunistic > 0) opportunisticPlot$text` Acoustic detections included species name 
 `r formatListGrammar(unique(detSummary$Species))` (Table 2, Figure 2).
 
 **Literature**
@@ -32,19 +31,19 @@ A total of `r nSonobuoys` sonobuoys were deployed at `r nrow(distinct(detSummary
 ####### Miller, Brian S., D. Gillespie, G. Weatherup, S. Calderan, and M. C. Double. 2014. Software for the localization of baleen whale calls using DIFAR sonobuoys: PAMGuard DIFAR. Report to the International Whaling Commission SC/65b/SH06. 7pp.
 
 
-```{r echo=FALSE, fig.cap = stationCap}
+```{r echo=FALSE, fig.cap = stationPlot$caption}
 knitr::include_graphics(paste0(outDir, '/Figures/stationPlot.jpeg'))
 ```
 
 
-```{r echo=FALSE, fig.cap = opportunisticCap}
-if(nOpportunistic > 0) {
+```{r echo=FALSE, fig.cap = if(reportText$nOpportunistic > 0) opportunisticPlot$caption}
+if(reportText$nOpportunistic > 0) {
   knitr::include_graphics(paste0(outDir, '/Figures/opportunisticPlot.jpeg'))
 }
 ```
 
 
-```{r echo=FALSE, fig.cap = detectionCap}
+```{r echo=FALSE, fig.cap = detectionPlot$caption}
 knitr::include_graphics(paste0(outDir, '/Figures/detectionPlot.jpeg'))
 ```
 

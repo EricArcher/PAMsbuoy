@@ -4,11 +4,11 @@
 \alias{mapStations}
 \title{Create a Summary Map of All Sonobuoy Stations}
 \usage{
-mapStations(stationList, zoom = "auto", crop = FALSE, map = NULL,
-  title = "Sonobuoy Stations", size = 3)
+mapStations(detectionData, zoom = "auto", crop = FALSE, map = NULL,
+  title = "Sonobuoy Stations", colorBy = "Cruise", size = 3)
 }
 \arguments{
-\item{stationList}{list of sonobuoy stations returned by loadStations}
+\item{detectionData}{detection summary data returned by \code{detectionSummary}}
 
 \item{zoom}{zoom level used for the map. Default is 'auto', will back out from
 a zoom level of 10 until all data fits. If an integer, will force that zoom
@@ -21,7 +21,9 @@ by the getMap function. Can be included to reduce calls to getMap.}
 
 \item{title}{a title for the plot}
 
-\item{size}{size of points for graph}
+\item{colorBy}{column to color points by}
+
+\item{size}{size of points to plot}
 }
 \description{
 Return a ggmap object showing all sonobuoy stations.
