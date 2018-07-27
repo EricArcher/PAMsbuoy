@@ -5,15 +5,15 @@
 \alias{buoyPositionInitial}
 \title{Buoy Position}
 \usage{
-buoyPosition(x, buoy.data, method = c("initial", "interpolate", "drift"), ...)
+buoyPosition(x, buoyData, method = c("initial", "interpolate", "drift"), ...)
 
-buoyPositionInitial(x, buoy.data)
+buoyPositionInitial(x, buoyData)
 }
 \arguments{
 \item{x}{a data frame containing a column specifying buoy (\code{Buoy}) and
 time (\code{UTC})}
 
-\item{buoy.data}{data.frame of buoy positions. Format depends on choice of
+\item{buoyData}{data.frame of buoy positions. Format depends on choice of
 \code{method}}
 
 \item{method}{method of position estimation to use. \code{initial} chooses the

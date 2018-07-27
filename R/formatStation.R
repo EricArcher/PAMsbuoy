@@ -79,10 +79,10 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
 
   info <- formatBuoyInfo(buoyList)
 
-  missing.positions <- setdiff(buoyList, names(position))
-  if(length(missing.positions) > 0) {
+  missingPositions <- setdiff(buoyList, names(position))
+  if(length(missingPositions) > 0) {
     message('**CRITICAL: Missing deployment position information for buoy(s) ',
-            paste(missing.positions, collapse = ', '), '. \n',
+            paste(missingPositions, collapse = ', '), '. \n',
             '** You must fix in the database or provide as a separate csv file.\n',
             'If providing a csv file, it must have columns UTC, Buoy, Latitude, Longitude. ',
             'Dates should be in YYYY-MM-DD H:M:S format (this can be changed with the dateFormat',
@@ -92,7 +92,7 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
       return(formatStation(db = db, buoyPositions = buoyPositions, overrideError = overrideError,
                            dateFormat = dateFormat, extraCols = extraCols, ...))
     } else {
-      for(b in missing.positions) {
+      for(b in missingPositions) {
         position[b] <- list(NULL)
         error[b] <- TRUE
       }
@@ -101,22 +101,22 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
   position <- position[order(names(position))]
   error <- error[order(names(error))]
 
-  missing.calibration <- setdiff(buoyList, names(calibration))
-  if(length(missing.calibration) > 0) {
-    for(b in missing.calibration) {
+  missingCalibration <- setdiff(buoyList, names(calibration))
+  if(length(missingCalibration) > 0) {
+    for(b in missingCalibration) {
       calibration[b] <- list(NULL)
     }
     calibration <- calibration[order(names(calibration))]
-    message("  no calibration records for buoy(s) ", paste(missing.calibration, collapse = ", "))
+    message("  no calibration records for buoy(s) ", paste(missingCalibration, collapse = ", "))
   }
 
-  missing.effort <- setdiff(buoyList, names(effort))
-  if(length(missing.effort) > 0) {
-    for(b in missing.effort) {
+  missingEffort <- setdiff(buoyList, names(effort))
+  if(length(missingEffort) > 0) {
+    for(b in missingEffort) {
       effort[b] <- list(NULL)
     }
     effort <- effort[order(names(effort))]
-    message("  no complete effort records for buoy(s) ", paste(missing.effort, collapse = ", "))
+    message("  no complete effort records for buoy(s) ", paste(missingEffort, collapse = ", "))
   }
 
   calibration <- calculateOffset(calibration, position, db)
@@ -134,10 +134,10 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
 
   # a list of each detection
   detections <- formatDetections(db, buoys, extraCols)
-  missing.detections <- setdiff(unique(detections$Buoy), buoyList)
-  if(length(missing.detections) > 0) {
+  missingDetections <- setdiff(unique(detections$Buoy), buoyList)
+  if(length(missingDetections) > 0) {
     message('**CRITICAL: Detections are present for buoy(s)',
-            paste(missing.detections, collapse = ', '),
+            paste(missingDetections, collapse = ', '),
             ', but there is no deployment, effort, or calibration data. \n',
             '** You must fix in the database or provide deployment position in a separate csv file.')
     if(!overrideError) {
@@ -145,7 +145,7 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
       return(formatStation(db = db, buoyPositions = buoyPositions, overrideError = overrideError,
                            dateFormat = dateFormat, extraCols = extraCols, ...))
     } else {
-      for(b in missing.detections) {
+      for(b in missingDetections) {
         buoys[[b]] <- list(error=TRUE)
       }
       buoys <- buoys[order(names(buoys))]
@@ -214,10 +214,10 @@ formatBuoyEffort <- function(db) {
   db$Spectrogram_Annotation <- db$Spectrogram_Annotation %>%
     mutate(
       Note = tolower(str_trim(Note)),
-      noise.sim = stringsim(Note, "noise"),
-      is.noise = noise.sim >= 0.8 | grepl("noise", Note)
+      noiseSim = stringsim(Note, "noise"),
+      isNoise = noiseSim >= 0.8 | grepl("noise", Note)
     )
-  i <- with(db$Spectrogram_Annotation, which(!is.noise & Note != ""))
+  i <- with(db$Spectrogram_Annotation, which(!isNoise & Note != ""))
   if(length(i) > 0) {
     message(
       "  Spectrogram_Annotation records ",
@@ -226,16 +226,16 @@ formatBuoyEffort <- function(db) {
     )
   }
 
-  noise.off <- db$Spectrogram_Annotation %>%
-    filter(is.noise) %>%
+  noiseOff <- db$Spectrogram_Annotation %>%
+    filter(isNoise) %>%
     mutate(Status = "off effort") %>%
     select(Channels, UTC, Duration, Status)
-  noise.on <- noise.off %>%
+  noiseOn <- noiseOff %>%
     mutate(
       UTC = UTC + Duration,
       Status = "on effort"
     )
-  noise <- bind_rows(noise.off, noise.on) %>%
+  noise <- bind_rows(noiseOff, noiseOn) %>%
     arrange(Channels, UTC) %>%
     select(-Duration)
 
@@ -245,36 +245,36 @@ formatBuoyEffort <- function(db) {
     arrange(UTC) %>%
     select(UTC, Status, Channels)
 
-  final.effort <- sapply(buoys, function(b) {
-    b.noise <- noise
-    b.noise$is.buoy <- sapply(b.noise$Channels, function(x) {
+  finalEffort <- sapply(buoys, function(b) {
+    buoyNoise <- noise
+    buoyNoise$isBuoy <- sapply(buoyNoise$Channels, function(x) {
       any(convertBinaryChannel(x) == b)
     })
-    b.noise <- b.noise %>%
-      filter(is.buoy) %>%
-      select(-Channels, -is.buoy)
+    buoyNoise <- buoyNoise %>%
+      filter(isBuoy) %>%
+      select(-Channels, -isBuoy)
 
-    b.eff <- eff %>%
-      mutate(is.buoy = sapply(Channels, function(x) {
+    buoyEff <- eff %>%
+      mutate(isBuoy = sapply(Channels, function(x) {
         any(convertBinaryChannel(x) == b)
       })) %>%
-      filter(is.buoy) %>%
-      select(-Channels, -is.buoy)
+      filter(isBuoy) %>%
+      select(-Channels, -isBuoy)
 
-    if(nrow(b.eff)==0) {
+    if(nrow(buoyEff)==0) {
       return(NULL)
     }
 
-    if(nrow(b.eff)==1) {
+    if(nrow(buoyEff)==1) {
       message('  buoy ', b, ' has only one effort record')
     }
 
-    b.eff <- bind_rows(b.eff, b.noise) %>%
+    buoyEff <- bind_rows(buoyEff, buoyNoise) %>%
       arrange(UTC) %>%
       mutate(Buoy = b) %>%
       select(Buoy, UTC, Status)
 
-    ons <- which(b.eff$Status == "on effort")
+    ons <- which(buoyEff$Status == "on effort")
     if(length(ons)==0) {
       message('  no "on effort" records for buoy ', b)
       return(NULL)
@@ -282,17 +282,17 @@ formatBuoyEffort <- function(db) {
       if(min(ons) != 1) {
         message("  first effort record for buoy ", b, " is not 'on effort'")
       }
-      b.eff <- b.eff[min(ons):nrow(b.eff), ]
+      buoyEff <- buoyEff[min(ons):nrow(buoyEff), ]
     }
 
-    if(nrow(b.eff)==1) {
+    if(nrow(buoyEff)==1) {
       good <- TRUE
     } else {
-      good <- sapply(2:nrow(b.eff), function(i) {
-        if(b.eff$Status[i] == "on effort") {
-          b.eff$Status[i - 1] == "off effort"
+      good <- sapply(2:nrow(buoyEff), function(i) {
+        if(buoyEff$Status[i] == "on effort") {
+          buoyEff$Status[i - 1] == "off effort"
         } else {
-          b.eff$Status[i - 1] == "on effort"
+          buoyEff$Status[i - 1] == "on effort"
         }
       })
       good <- c(TRUE, good)
@@ -300,31 +300,31 @@ formatBuoyEffort <- function(db) {
     if(any(!good)) {
       message("  on and off effort records for buoy ", b, " are not alternating")
     }
-    b.eff <- b.eff[good, ]
+    buoyEff <- buoyEff[good, ]
 
-    offs <- which(b.eff$Status == 'off effort')
+    offs <- which(buoyEff$Status == 'off effort')
     if(length(offs)==0) {
       message('  no "off effort" records for buoy ', b)
       return(NULL)
     } else {
-      if(max(offs) != nrow(b.eff)) {
+      if(max(offs) != nrow(buoyEff)) {
         message('  last effort record for buoy ', b, ' is not "off effort"')
       }
-      b.eff <- b.eff[1:max(offs),]
+      buoyEff <- buoyEff[1:max(offs),]
     }
 
     # Want a clean way of doing this if nrow=1. Doesnt work with vector result, just giving false[1]
-    if(nrow(b.eff)==1) {
-      b.eff <- b.eff %>% mutate(
-        effort.id = 1,
+    if(nrow(buoyEff)==1) {
+      buoyEff <- buoyEff %>% mutate(
+        effortId = 1,
         Status = gsub(' ', '.', Status)
     )} else {
-      b.eff <- b.eff %>% mutate(
-        effort.id = rep(1:(n()/2), each=2),
+      buoyEff <- buoyEff %>% mutate(
+        effortId = rep(1:(n()/2), each=2),
         Status = gsub(' ', '.', Status)
     )}
 
-    b.eff %>%
+    buoyEff %>%
       # mutate(
       #   effort.id = ifelse(nrow(b.eff)==1, 1, rep(1:(n() / 2), each = 2)),
       #   Status = gsub(" ", ".", Status)
@@ -335,9 +335,9 @@ formatBuoyEffort <- function(db) {
       select(Buoy, on, off, duration)
   }, simplify = FALSE)
 
-  names(final.effort) <- buoys
+  names(finalEffort) <- buoys
 
-  Filter(Negate(is.null), final.effort)
+  Filter(Negate(is.null), finalEffort)
 }
 
 #' @rdname formatStation
@@ -345,7 +345,7 @@ formatBuoyEffort <- function(db) {
 formatDetections <- function(db, buoys, extraCols = NULL) {
   keepCols <- c('detection', 'Buoy', 'UTC', 'DIFARBearing', 'ClipLength',
                 'DifarFrequency', 'SignalAmplitude', 'DifarGain', 'Species',
-                'CalibrationValue', 'CalibratedBearing')
+                'calibrationValue', 'calibratedBearing')
   if(!is.null(extraCols) & all(extraCols %in% colnames(db$DIFAR_Localisation))) {
     keepCols <- c(keepCols, extraCols)
   }
@@ -356,8 +356,8 @@ formatDetections <- function(db, buoys, extraCols = NULL) {
       MatchedAngles = gsub(" ", "", MatchedAngles)
     ) %>%
     mutate(detection = labelDetection(.),
-           CalibrationValue = NA,
-           CalibratedBearing = NA) %>%
+           calibrationValue = NA,
+           calibratedBearing = NA) %>%
     select_(.dots = keepCols) %>%
     arrange(detection, Buoy, UTC)
 
@@ -365,31 +365,31 @@ formatDetections <- function(db, buoys, extraCols = NULL) {
     eff <- buoys[[b]]$effort
     if(is.null(eff)) return(
       data.frame(
-        effort.window = NA,
+        effortWindow = NA,
         effort = NA,
-        effort.duration = NA,
+        effortDuration = NA,
         stringsAsFactors = FALSE
       )
     )
     for(i in 1:nrow(eff)) {
       if(eff$on[i] <= dt & eff$off[i] >= dt) {
         return(data.frame(
-          effort.window = i,
+          effortWindow = i,
           effort = "on",
-          effort.duration = difftime(dt, eff$on[i], units = "secs"),
+          effortDuration = difftime(dt, eff$on[i], units = "secs"),
           stringsAsFactors = FALSE
         ))
       }
     }
     data.frame(
-      effort.window = NA,
+      effortWindow = NA,
       effort = "off",
-      effort.duration = NA,
+      effortDuration = NA,
       stringsAsFactors = FALSE
     )
   }
 
-  effort.status <- mapply(
+  effortStatus <- mapply(
     detectionEffortStatus,
     b = detections$Buoy,
     dt = detections$UTC,
@@ -398,7 +398,7 @@ formatDetections <- function(db, buoys, extraCols = NULL) {
     USE.NAMES = FALSE
   ) %>% bind_rows
 
-  bind_cols(detections, effort.status)
+  bind_cols(detections, effortStatus)
 }
 
 formatStationInfo <- function(db) {
@@ -441,10 +441,10 @@ formatStationInfo <- function(db) {
 formatBuoyInfo <- function(buoyList) {
   info <- vector('list', length=length(buoyList))
   for(b in seq_along(buoyList)) {
-    info[[b]] <- list(BuoyQuality = NA,
-                    CalibrationType = NA,
-                    Drift = list(rate = NA, bearing = NA, stderr = NA,
-                                 errorPlot = NA, mapPlot = NA, Quality = NA))
+    info[[b]] <- list(buoyQuality = NA,
+                    calibrationType = NA,
+                    drift = list(rate = NA, bearing = NA, stderr = NA,
+                                 errorPlot = NA, mapPlot = NA, quality = NA))
   }
   names(info) <- buoyList
   info

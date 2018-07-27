@@ -16,6 +16,10 @@ Report/Tables, and Report/Figures within this directory}
 \item{fileName}{name of the report file}
 
 \item{format}{output format of report, either word or html}
+
+\item{wincruz}{an optional wincruz file for matching species to opportunistic sightings}
+
+\item{specFile}{an optional species code file to match with wincruz species IDs}
 }
 \description{
 Creates a summary report to be used for cruise reports or as a starting

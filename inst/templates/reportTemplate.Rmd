@@ -21,7 +21,7 @@ kHz sampling rate with a `r reportText$recordingSystem` and recorded to hard dri
 Detection and localization of calls used the Pamguard DIFAR module (Miller et al. 2014); sonobuoys were calibrated following methods developed by Miller et al. (2014). Calibrations   consisted of [x] number of samples, with each sample consisting of [x] s clips with a minimum interval of [x] s between clips. Classification settings were customized for calibration on vessel noise and for analysis of specific call types (Table 2). 
 
 
-A total of `r reportText$nSonobuoys` sonobuoys were deployed at `r nrow(distinct(detSummary, Station))` locations throughout the study area (Fig. 1)`r reportText$vesselText` (Table 1).  Deployments included `r reportText$nStations` sonobuoy stations and `r reportText$nOpportunistic` sonobuoys deployed opportunistically in the presence of sighted cetaceans (Table 1). `r if(reportText$nOpportunistic > 0) opportunisticPlot$text` Acoustic detections included species name 
+A total of `r reportText$nSonobuoys` sonobuoys were deployed at `r nrow(distinct(detSummary, station))` locations throughout the study area (Fig. 1)`r reportText$vesselText` (Table 1).  Deployments included `r reportText$nStations` sonobuoy stations and `r reportText$nOpportunistic` sonobuoys deployed opportunistically in the presence of sighted cetaceans (Table 1). `r if(reportText$nOpportunistic > 0) opportunisticPlot$text` Acoustic detections included species name 
 `r formatListGrammar(unique(detSummary$Species))` (Table 2, Figure 2).
 
 **Literature**

@@ -14,17 +14,17 @@
 calculateOffset <- function(calibration, position, db) {
   # loop through buoys in calibration list
   for(b in names(calibration)) {
-    b.cal <- calibration[[b]]
+    buoyCal <- calibration[[b]]
     # get buoy position
-    if(is.null(b.cal)) {
+    if(is.null(buoyCal)) {
       next
     }
-    buoy.pos <- buoyPosition(b.cal, position, method='initial')
+    buoyPos <- buoyPosition(buoyCal, position, method='initial')
     # get ship position at calibration point times
-    ship.pos <- estimatePosition(b.cal$UTC, db$gpsData)
+    shipPos <- estimatePosition(buoyCal$UTC, db$gpsData)
     # calculate true bearing from buoy to ship for each set of positions
-    true.bearing <- if(is.null(buoy.pos)) {
-      rep(NA, nrow(ship.pos))
+    trueBearing <- if(is.null(buoyPos)) {
+      rep(NA, nrow(shipPos))
       # matrix(NA, nrow=2, ncol=nrow(ship.pos))
     } else {
       # mapply(
@@ -32,31 +32,31 @@ calculateOffset <- function(calibration, position, db) {
       # buoy.pos$Latitude, buoy.pos$Longitude,
       # ship.pos$Latitude, ship.pos$Longitude
       # )
-      geosphere::bearing(cbind(buoy.pos$Longitude, buoy.pos$Latitude),
-                         cbind(ship.pos$Longitude, ship.pos$Latitude))
+      geosphere::bearing(cbind(buoyPos$Longitude, buoyPos$Latitude),
+                         cbind(shipPos$Longitude, shipPos$Latitude))
     }
     # Put in placeholders for calibration data. Useful for these to default to NA
     # for summaries and looking at data
-    CalibrationValue <- rep(NA, nrow(ship.pos))
-    CalibratedBearing <- rep(NA, nrow(ship.pos))
+    calibrationValue <- rep(NA, nrow(shipPos))
+    calibratedBearing <- rep(NA, nrow(shipPos))
     # add magnetic variation and true bearing to calibration data frame
-    b.cal <- cbind(
-      b.cal,
-      magnetic.variation = ship.pos$MagneticVariation,
-      true.bearing = true.bearing %% 360,
+    buoyCal <- cbind(
+      buoyCal,
+      magneticVariation = shipPos$MagneticVariation,
+      trueBearing = trueBearing %% 360,
       # true.bearing = apply(true.bearing, 2, mean),
-      BoatLatitude = ship.pos$Latitude,
-      BoatLongitude = ship.pos$Longitude,
-      CalibrationValue,
-      CalibratedBearing
+      BoatLatitude = shipPos$Latitude,
+      BoatLongitude = shipPos$Longitude,
+      calibrationValue,
+      calibratedBearing
     )
     # calculate offset = true - difar bearing. Make range -180 to 180
-    b.cal$offset <- sapply((b.cal$true.bearing - b.cal$DIFARBearing) %% 360, function(x) {
+    buoyCal$offset <- sapply((buoyCal$trueBearing - buoyCal$DIFARBearing) %% 360, function(x) {
       if(x > 180) {
         x-360
       } else x
     })
-    calibration[[b]] <- b.cal
+    calibration[[b]] <- buoyCal
   }
   calibration
 }

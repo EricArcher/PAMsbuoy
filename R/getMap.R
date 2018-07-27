@@ -50,7 +50,7 @@ getMap <- function(positions, force=FALSE, zoom=10, center=NULL, quiet=FALSE, of
   if(!offline) {
     nTries <- 3
     map <- NULL
-    suppressWarnings(
+    suppressMessages(
       for(t in 1:nTries) {
         try(
           map <- get_map(location = center, zoom=zoom)

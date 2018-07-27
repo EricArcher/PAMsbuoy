@@ -2,9 +2,11 @@
 #' @title Apply Bearing Calibration
 #' @description Return calibrated DIFAR angles using different methods
 #'
-#' @param angle.data data.frame containing a \code{Buoy} column and a
-#' \code{DIFARBearing} column with uncalibrated angle data
-#' @param buoy.data list of data.frames containing buoy calibration data
+#' @param stationList a list of sonobuoy stations as created by \code{loadStations},
+#'   or a single station as created by \code{formatStation}
+#' @param myStations IDs of stations to check. Needed for calibrateStations to work correctly
+#' @param recalibrate should buoys that have already been checked be re-examined? If
+#'   \code{FALSE}, any buoys with existing buoyQuality will be skipped over.
 #' @param method method of angle calibration to use. \code{magnetic} uses
 #' the median of magnetic varation values. \code{median} uses the median
 #' of offset angles. \code{sine} uses sinusoidal fit to error.
@@ -47,22 +49,22 @@ applyCalibration <- function(stationList, myStations, recalibrate = FALSE, metho
       thisBuoyData <- stationList[[s]]$buoys[[b]]
 
       # If value is not NA we have already calibrated, so dont re-cal
-      if(!recalibrate && !is.na(thisBuoyData$info$CalibrationType)) {
+      if(!recalibrate && !is.na(thisBuoyData$info$calibrationType)) {
         next
       }
 
-      if(is.na(thisBuoyData$info$BuoyQuality)) {
+      if(is.na(thisBuoyData$info$buoyQuality)) {
         skipCount <- skipCount + 1
         next
       }
-      if(!(thisBuoyData$info$BuoyQuality %in% qualityCheck)) {
+      if(!(thisBuoyData$info$buoyQuality %in% qualityCheck)) {
         next
       }
       # Calculate all here so we can graph and use later
       methodValues <- with(thisBuoyData$calibration,
                            c('Mean'=mean(offset) %% 360,
                              'Median'=median(offset) %% 360,
-                             'Magnetic'=median(magnetic.variation) %% 360))
+                             'Magnetic'=median(magneticVariation) %% 360))
       methodValues <- ifelse(methodValues > 180, methodValues - 360, methodValues)
       if(!useSame) {
         # Lines for draw on graph
@@ -96,15 +98,15 @@ applyCalibration <- function(stationList, myStations, recalibrate = FALSE, metho
         magnetic = function(data) methodValues[3]
       )
 
-      stationList[[s]]$buoys[[thisBuoy]]$info$CalibrationType <- method
+      stationList[[s]]$buoys[[thisBuoy]]$info$calibrationType <- method
 
       stationList[[s]]$detections[whichThisBuoy,] <- stationList[[s]]$detections[whichThisBuoy,] %>%
-        mutate(CalibrationValue = calibrationFunction(.),
-               CalibratedBearing = (DIFARBearing + CalibrationValue) %% 360)
+        mutate(calibrationValue = calibrationFunction(.),
+               calibratedBearing = (DIFARBearing + calibrationValue) %% 360)
 
       stationList[[s]]$buoys[[thisBuoy]]$calibration <- stationList[[s]]$buoys[[thisBuoy]]$calibration %>%
-        mutate(CalibrationValue = calibrationFunction(.),
-               CalibratedBearing = (DIFARBearing + CalibrationValue) %% 360)
+        mutate(calibrationValue = calibrationFunction(.),
+               calibratedBearing = (DIFARBearing + calibrationValue) %% 360)
       calibrateCount <- calibrateCount + 1
     }
   }

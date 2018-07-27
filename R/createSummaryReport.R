@@ -12,6 +12,8 @@
 #'   Report/Tables, and Report/Figures within this directory
 #' @param fileName name of the report file
 #' @param format output format of report, either word or html
+#' @param wincruz an optional wincruz file for matching species to opportunistic sightings
+#' @param specFile an optional species code file to match with wincruz species IDs
 #'
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
@@ -43,26 +45,26 @@ createSummaryReport <- function(stationList, outDir='.', fileName='summaryReport
   detSummary <- detectionSummary(stationList)
   reportText <- list()
   if(!test) {
-  reportText$cruiseName <- readline(prompt = 'What is the name of this cruise? \n')
-  reportText$cruiseAbbr <- readline(prompt = 'What is the abbreviated name for this cruise? \n')
+    reportText$cruiseName <- readline(prompt = 'What is the name of this cruise? \n')
+    reportText$cruiseAbbr <- readline(prompt = 'What is the abbreviated name for this cruise? \n')
 
-  # Get names for vessels, then use to format for report
-  myVessels <- levels(as.factor(detSummary$Cruise))
-  if(length(myVessels)==0) {
-    myVessels <- readline(prompt='No vessel IDs found in database. What is the name of the vessel? \n')
-    detSummary$Cruise <- factor(str_replace_na(detSummary$Cruise, myVessels), levels = myVessels)
-  } else {
-    names(myVessels) <- myVessels
-    for(v in seq_along(myVessels)) {
-      myVessels[v] <- readline(prompt = paste0('What is the name of the vessel with ID ', myVessels[v], '? \n'))
+    # Get names for vessels, then use to format for report
+    myVessels <- levels(as.factor(detSummary$cruise))
+    if(length(myVessels)==0) {
+      myVessels <- readline(prompt='No vessel IDs found in database. What is the name of the vessel? \n')
+      detSummary$cruise <- factor(str_replace_na(detSummary$cruise, myVessels), levels = myVessels)
+    } else {
+      names(myVessels) <- myVessels
+      for(v in seq_along(myVessels)) {
+        myVessels[v] <- readline(prompt = paste0('What is the name of the vessel with ID ', myVessels[v], '? \n'))
+      }
+      detSummary$cruise <- factor(str_replace_all(detSummary$cruise, myVessels), levels = myVessels)
     }
-    detSummary$Cruise <- factor(str_replace_all(detSummary$Cruise, myVessels), levels = myVessels)
-  }
   } else {
     reportText$cruiseName <- 'California Current Cetacean Ecosystem Assessment Survey'
     reportText$cruiseAbbr <- 'CalCurCEAS'
     myVessels <- c('1706' = 'Reuben Lasker')
-    detSummary$Cruise <- 'Reuben Lasker'
+    detSummary$cruise <- 'Reuben Lasker'
   }
 
   # detSummary$Cruise <- factor(str_replace_all(detSummary$Cruise, myVessels), levels = myVessels)
@@ -74,13 +76,13 @@ createSummaryReport <- function(stationList, outDir='.', fileName='summaryReport
   reportText$recordingSystem <- stationInfo$recordingSystem
   reportText$sampleRate <- round(stationInfo$sampleRate/1000, 0)
   reportText$sonobuoyType <- stationInfo$instrument_id
-  reportText$nSonobuoys <- nrow(distinct(detSummary, Station, Buoy))
-  recordLengths <- detSummary %>% group_by(StationType) %>% distinct(Station, RecordingLength) %>%
-    summarise(Length=sum(RecordingLength))
-  reportText$nStations <- nrow(distinct(filter(detSummary, StationType=='DensityEstimate'), Station))
-  reportText$stationLength <- recordLengths %>% filter(StationType=='DensityEstimate') %>% .$Length
-  reportText$nOpportunistic <- nrow(distinct(filter(detSummary, StationType=='Opportunistic'), Station, Buoy))
-  reportText$opportunisticLength <- recordLengths %>% filter(StationType=='Opportunistic') %>% .$Length
+  reportText$nSonobuoys <- nrow(distinct(detSummary, station, Buoy))
+  recordLengths <- detSummary %>% group_by(stationType) %>% distinct(station, recordingLength) %>%
+    summarise(length=sum(recordingLength))
+  reportText$nStations <- nrow(distinct(filter(detSummary, stationType=='DensityEstimate'), station))
+  reportText$stationLength <- recordLengths %>% filter(stationType=='DensityEstimate') %>% .$length
+  reportText$nOpportunistic <- nrow(distinct(filter(detSummary, stationType=='Opportunistic'), station, Buoy))
+  reportText$opportunisticLength <- recordLengths %>% filter(stationType=='Opportunistic') %>% .$length
 
   colorPalette <- c("#000000","#009E73", "#0072B2", "#D55E00", "#F0E442", "#CC79A7")
   colorNames <- c('Black', 'Green', 'Blue', 'Orange', 'Yellow', 'Pink')
@@ -111,7 +113,7 @@ createSummaryReport <- function(stationList, outDir='.', fileName='summaryReport
     paste0(', including ',
            formatListGrammar(
              sapply(reportText$myVessels, function(v) {
-               num <- detSummary %>% filter(Cruise==gsub('\\*', '', v)) %>% distinct(Buoy, Station) %>% nrow()
+               num <- detSummary %>% filter(cruise==gsub('\\*', '', v)) %>% distinct(Buoy, station) %>% nrow()
                paste0(num, ' from vessel ', v)
              })))
   }
@@ -126,7 +128,7 @@ createSummaryReport <- function(stationList, outDir='.', fileName='summaryReport
          word = {
            outFile <- paste0(fileName, '.docx')
            outFormat <- 'word_document'
-           })
+         })
 
   cat('\nCreating report...\n')
   # Once we're inside this render the wd is the system.file templates dir, so everything inside
@@ -136,7 +138,7 @@ createSummaryReport <- function(stationList, outDir='.', fileName='summaryReport
 }
 
 tableToImage <- function(summaryData, headerHeight=59, rowHeight=37,
-                             outDir='Report', fileName='table',  maxRows=30) {
+                         outDir='Report', fileName='table',  maxRows=30) {
   # Height 59 if no caption, 94 if caption. New head 58, 37 + 37 per row
   # find_phantom isnt exported, gotta do this all janky like
   checkPhantom <- utils::getFromNamespace('find_phantom', 'webshot')
@@ -150,8 +152,8 @@ tableToImage <- function(summaryData, headerHeight=59, rowHeight=37,
   rmarkdown::render(system.file('templates/tableTemplate.Rmd', package='PAMsbuoy')
                     , tmp, output_format='html_document', quiet=TRUE)
   # Saved as one big html in tmp file, now we slice it into bits. Get rows per station here.
-  stationRows <- summaryData %>% group_by(Station) %>% summarise(Rows=n(), mn=min(UTC)) %>% arrange(mn)
-  stationRows <- stationRows$Rows
+  stationRows <- summaryData %>% group_by(station) %>% summarise(rows=n(), mn=min(UTC)) %>% arrange(mn)
+  stationRows <- stationRows$rows
   imageNum <- 1
   thisRows <- 0
   cat('Creating tables... \n')
@@ -185,14 +187,14 @@ makeHtmlTable <- function(summaryData) {
   # This is to order factors by date, otherwise order is 1, 10 etc.
   stationOrder <- summaryData %>%
     arrange(UTC) %>%
-    distinct(Station)
-  stationOrder <- stationOrder$Station
+    distinct(station)
+  stationOrder <- stationOrder$station
   # HTMLS are just formatted for boldness
   detSummary <- summaryData %>%
-    mutate(StationNum = as.numeric(factor(Station, levels=stationOrder)),
+    mutate(StationNum = as.numeric(factor(station, levels=stationOrder)),
            HTMLSpecies=paste0(Species, ' <b>[', UniqueDetections,']</b>'),
            HTMLBuoy=paste0(Buoy,' <b>[', NumDetections,']</b>'))
-  groupId <- summary(factor(detSummary$Station, levels=stationOrder))
+  groupId <- summary(factor(detSummary$station, levels=stationOrder))
   names(groupId) <- paste('Station:', names(groupId))
   odds <- which(detSummary$StationNum %% 2 == 1)
   detSummary <- select(detSummary, -StationNum) %>%
@@ -225,14 +227,14 @@ formatListGrammar <- function(words) {
 }
 
 makeStationPlot <- function(detSummary, myMap, figurePath, reportText) {
-  plot <- mapStations(filter(detSummary, StationType == 'DensityEstimate'),
-                             map=myMap, size=2, colorBy = 'Cruise') +
+  plot <- mapStations(filter(detSummary, stationType == 'DensityEstimate'),
+                      map=myMap, size=2, colorBy = 'cruise') +
     labs(title = paste0('Figure ', reportText$figureCount, ': Sonobuoy Stations')) +
     guides(color = guide_legend(tile='Vessel(s)'))
   colorNames <- paste0('(', c('Black', 'Green', 'Blue', 'Orange', 'Yellow', 'Pink')[1:length(reportText$myVessels)], ')')
   vesselColors <- formatListGrammar(paste(reportText$myVessels, colorNames))
   caption <- paste0('Figure ', reportText$figureCount, ': Map of Sonobuoy Stations during the ',
-                       reportText$cruiseAbbr, ' survey for vessel(s) ', vesselColors)
+                    reportText$cruiseAbbr, ' survey for vessel(s) ', vesselColors)
   ggsave(filename='stationPlot.jpeg', plot=plot, path=figurePath,
          width=6, height=4.5, units='in', dpi=200)
   list(plot=plot, caption=caption)
@@ -250,7 +252,7 @@ makeOpportunisticPlot <- function(detSummary, myMap, figurePath, reportText, win
   # Now check if we provided one or not.
   if(is.null(wincruz)) {
     cat('Species names cannot be provide without WinCruz data. \n')
-    plotColor <- 'Cruise'
+    plotColor <- 'cruise'
     plotLegend <- 'Vessel(s)'
   } else {
     # If we have wincruz, need to get species data too. Defaults to provided one, or read csv
@@ -283,7 +285,7 @@ makeOpportunisticPlot <- function(detSummary, myMap, figurePath, reportText, win
       left_join(specCode, by='Code') %>% mutate(SpeciesName = str_replace_na(SpeciesName, 'No Sighting ID'))
   }
   caption <- paste0('Figure ', reportText$figureCount, ': Map of opportunistic sonobuoys deployed during the ',
-                             reportText$cruiseAbbr, ' survey')
+                    reportText$cruiseAbbr, ' survey')
   text <- paste0('Opportunistic sonobuoys included a total of ',
                  round(reportText$opportunisticLength/60, 0), ' minutes of recordings')
   if(plotColor=='SpeciesName') {
@@ -294,7 +296,7 @@ makeOpportunisticPlot <- function(detSummary, myMap, figurePath, reportText, win
   } else {
     text <- paste0(text, '.')
   }
-  plot <- mapStations(filter(detSummary, StationType == 'Opportunistic'),
+  plot <- mapStations(filter(detSummary, stationType == 'Opportunistic'),
                       map=myMap, size=2, colorBy = plotColor) +
     labs(title = paste0('Figure ', reportText$figureCount, ': Opportunistic Sonobuoys')) +
     guides(color = guide_legend(title=plotLegend))
@@ -307,7 +309,7 @@ makeDetectionPlot <- function(detSummary, myMap, figurePath, reportText) {
   plot <- mapDetections(detSummary, combine=FALSE, map=myMap, value='NumDetections', size=2, ncol=3) +
     labs(title = paste0('Figure ', reportText$figureCount, ': Call Type Detections'))
   caption <- paste0('Figure ', reportText$figureCount, ': Acoustic detection of call types attributed to ',
-                         'species [x]')
+                    'species [x]')
   ggsave(filename='detectionPlot.jpeg', plot=plot, path=figurePath,
          width=8, height=4, units='in', dpi=300)
   list(plot=plot, caption=caption)

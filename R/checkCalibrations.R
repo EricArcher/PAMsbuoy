@@ -6,13 +6,13 @@
 #'
 #' @param stationList a list of sonobuoy stations as created by \code{loadStations},
 #'   or a single station as created by \code{formatStation}
-#' @param myStations IDs of stations to check. Neede for calibrateStations to work correctly
+#' @param myStations IDs of stations to check. Needed for calibrateStations to work correctly
 #' @param recalibrate should buoys that have already been checked be re-examined? If
-#'   \code{FALSE}, any buoys with existing BuoyQuality will be skipped over.
+#'   \code{FALSE}, any buoys with existing buoyQuality will be skipped over.
 #' @param midFun function to use to show center of the data
 #' @param goodRange range around center of data to show guidelines for good calibrations
 #'
-#' @return a list of sonobuoy stations with an added BuoyQuality field for each buoy.
+#' @return a list of sonobuoy stations with an added buoyQuality field for each buoy.
 #'
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
@@ -31,7 +31,7 @@ checkCalibrations <- function(stationList, myStations, recalibrate = FALSE, midF
     for(b in seq_along(stationList[[s]]$buoys)) {
       thisBuoy <- stationList[[s]]$buoys[[b]]
       if(!recalibrate) {
-        if(!is.na(thisBuoy$info$BuoyQuality)) {
+        if(!is.na(thisBuoy$info$buoyQuality)) {
           next
         }
       }
@@ -59,25 +59,25 @@ checkCalibrations <- function(stationList, myStations, recalibrate = FALSE, midF
       if(response == 4) {
         checkSummary <- summary(factor(unlist(lapply(stationList, function(s) {
           lapply(s$buoys, function(b) {
-            if(is.na(b$info$BuoyQuality)) {
+            if(is.na(b$info$buoyQuality)) {
               'Not Checked'
-            } else b$info$BuoyQuality
+            } else b$info$buoyQuality
           })
         })), levels=c('Good', 'Bad', 'Questionable', 'Not Checked')))
         cat('Checked ', checkCount, ' buoys total. \n', 'Summary of buoy quality check: \n',
             paste(paste0(names(checkSummary), ': ', checkSummary), collapse=', '), '\n', sep='')
         return(stationList)
       } else {
-        stationList[[s]]$buoys[[b]]$info$BuoyQuality <- choices[response]
+        stationList[[s]]$buoys[[b]]$info$buoyQuality <- choices[response]
         checkCount <- checkCount + 1
       }
     }
   }
   checkSummary <- summary(factor(unlist(lapply(stationList, function(s) {
     lapply(s$buoys, function(b) {
-      if(is.na(b$info$BuoyQuality)) {
+      if(is.na(b$info$buoyQuality)) {
         'Not Checked'
-      } else b$info$BuoyQuality
+      } else b$info$buoyQuality
     })
   })), levels=c('Good', 'Bad', 'Questionable', 'Not Checked')))
   cat('Checked ', checkCount, ' buoys total. \n', 'Summary of buoy quality check: \n',

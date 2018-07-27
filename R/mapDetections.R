@@ -29,8 +29,8 @@
 #' @export
 #'
 mapDetections <- function(detectionData, species='all', combine=TRUE, value='NumDetections', map=NULL,
-                          size=3, ncol=3, palette='Reds', nGroups=6, grouping='Station') {
-  detectionData$PlotMe <- detectionData[[value]]
+                          size=3, ncol=3, palette='Reds', nGroups=6, grouping='station') {
+  detectionData$plotMe <- detectionData[[value]]
   detectionData <- if(all(species %in% 'all')) {
     detectionData
   } else if(all(species %in% unique(detectionData$Species))) {
@@ -42,12 +42,12 @@ mapDetections <- function(detectionData, species='all', combine=TRUE, value='Num
   mapData <- if(combine) {
     detectionData %>% group_by_(.dots=grouping) %>%
       summarise(Longitude=median(Longitude), Latitude=median(Latitude),
-                Count=sum(PlotMe)) %>% data.frame() %>%
+                Count=sum(plotMe)) %>% data.frame() %>%
       mutate(Species = paste(species, collapse=' '))
   } else {
     detectionData %>% group_by_(.dots=c(grouping, 'Species')) %>%
       summarise(Longitude=median(Longitude), Latitude=median(Latitude),
-                Count=max(PlotMe)) %>% data.frame()
+                Count=max(plotMe)) %>% data.frame()
   }
   # Break into groups for coloring, then re-label groups for happiness.
   # sd <- round(sd(mapData$Count))

@@ -19,7 +19,7 @@
 #' @export
 #'
 mapStations <- function(detectionData, zoom='auto', crop=FALSE, map=NULL,
-                        title='Sonobuoy Stations', colorBy = 'Cruise', size=3) {
+                        title='Sonobuoy Stations', colorBy = 'cruise', size=3) {
   # buoyPositions <- do.call(rbind, lapply(stationList, function(s) {
   #   do.call(rbind, lapply(s$buoys, function(b) {
   #     buoyDat <- b$position[1,]

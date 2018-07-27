@@ -11,17 +11,17 @@ checkCalibrations(stationList, myStations, recalibrate = FALSE,
 \item{stationList}{a list of sonobuoy stations as created by \code{loadStations},
 or a single station as created by \code{formatStation}}
 
-\item{myStations}{IDs of stations to check. Neede for calibrateStations to work correctly}
+\item{myStations}{IDs of stations to check. Needed for calibrateStations to work correctly}
 
 \item{recalibrate}{should buoys that have already been checked be re-examined? If
-\code{FALSE}, any buoys with existing BuoyQuality will be skipped over.}
+\code{FALSE}, any buoys with existing buoyQuality will be skipped over.}
 
 \item{midFun}{function to use to show center of the data}
 
 \item{goodRange}{range around center of data to show guidelines for good calibrations}
 }
 \value{
-a list of sonobuoy stations with an added BuoyQuality field for each buoy.
+a list of sonobuoy stations with an added buoyQuality field for each buoy.
 }
 \description{
 Loop through histograms of buoy calibration offsets for each

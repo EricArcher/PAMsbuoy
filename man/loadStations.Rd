@@ -11,6 +11,8 @@ loadStations(folder, db.ext = "sqlite3", ...)
 a dialog box will be presented to choose a folder}
 
 \item{db.ext}{database extension to look for in chosen folder}
+
+\item{\dots}{other parameters to be passed to formatStation function}
 }
 \value{
 a list of sonobuoy stations

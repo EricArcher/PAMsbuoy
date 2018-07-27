@@ -8,16 +8,19 @@ applyCalibration(stationList, myStations, recalibrate = FALSE, method = "",
   ...)
 }
 \arguments{
+\item{stationList}{a list of sonobuoy stations as created by \code{loadStations},
+or a single station as created by \code{formatStation}}
+
+\item{myStations}{IDs of stations to check. Needed for calibrateStations to work correctly}
+
+\item{recalibrate}{should buoys that have already been checked be re-examined? If
+\code{FALSE}, any buoys with existing buoyQuality will be skipped over.}
+
 \item{method}{method of angle calibration to use. \code{magnetic} uses
 the median of magnetic varation values. \code{median} uses the median
 of offset angles. \code{sine} uses sinusoidal fit to error.}
 
 \item{\dots}{arguments passed on to other functions}
-
-\item{angle.data}{data.frame containing a \code{Buoy} column and a
-\code{DIFARBearing} column with uncalibrated angle data}
-
-\item{buoy.data}{list of data.frames containing buoy calibration data}
 }
 \description{
 Return calibrated DIFAR angles using different methods

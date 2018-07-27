@@ -138,4 +138,4 @@
 ## Anything without unid italicize species. For now, if multiple species detected save as 1 / 2 with
 # separate color for it and such.
 
-# Binary read on hiceas data broke =(
+

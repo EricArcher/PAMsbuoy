@@ -4,16 +4,18 @@
 \alias{driftCalibration}
 \title{Estimate Sonobuoy Drift Rate and Direction}
 \usage{
-driftCalibration(stationList, myStations, recalibrate = FALSE, map = FALSE,
-  ...)
+driftCalibration(stationList, myStations, recalibrate = FALSE, map = FALSE)
 }
 \arguments{
-\item{buoy.data}{list of data.frames containing buoy calibration and
-position data}
+\item{stationList}{a list of sonobuoy stations as created by \code{loadStations},
+or a single station as created by \code{formatStation}}
 
-\item{graph}{flag of whether or not to create likelihood graph for diagnostics}
+\item{myStations}{IDs of stations to check. Needed for calibrateStations to work correctly}
 
-\item{initial}{vector of initial values for optim algorithm in km/h and true bearing}
+\item{recalibrate}{should buoys that have already been checked be re-examined? If
+\code{FALSE}, any buoys with existing buoyQuality will be skipped over.}
+
+\item{map}{should we draw a map with ship position and estimated drift direction?}
 }
 \description{
 Return estimated drift rate and direction of a sonobuoy

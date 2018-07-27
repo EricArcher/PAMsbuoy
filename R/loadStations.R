@@ -4,6 +4,7 @@
 #' @param folder folder containing SQLite databases with DIFAR data. if missing
 #'   a dialog box will be presented to choose a folder
 #' @param db.ext database extension to look for in chosen folder
+#' @param \dots other parameters to be passed to formatStation function
 #'
 #' @return a list of sonobuoy stations
 #'
@@ -26,39 +27,34 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
   # need to wrap this in a try, otherwise if theres an error we dont close the sink connection
   cat('Loading stations... \n')
   pb <- txtProgressBar(min=0, max=length(fnames), style=3)
-  try({
-    st.list <- sapply(seq_along(fnames), function(f) {
-    # if((f %% 10)==1 | f == length(fnames)) {
-    #   cat('Loading station ', f, ' of ', length(fnames),'. \n')
-    # }
-    setTxtProgressBar(pb, f)
-    message(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", fnames[f])
-    station <- formatStation(loadDB(fnames[f], FALSE), overrideError = TRUE, ...)
-    for(b in seq_along(station$buoys)) {
-      if(station$buoys[[b]]$error) {
-        error <<- TRUE
+  stationList <- vector('list', length=length(fnames))
+  names(stationList) <- basename(fnames)
+  for(f in seq_along(fnames)) {
+    message('\n', format(Sys.time(), "%Y-%m-%d %H:%M:%S"), ":", fnames[f])
+    tryCatch({
+      station <- formatStation(loadDB(fnames[f], FALSE), overrideError = TRUE, ...)
+      for(b in seq_along(station$buoys)) {
+        if(station$buoys[[b]]$error) {
+          error <<- TRUE
+        }
+        station$buoys[[b]] <- station$buoys[[b]][!(names(station$buoys[[b]]) == 'error')]
       }
-      station$buoys[[b]] <- station$buoys[[b]][!(names(station$buoys[[b]]) == 'error')]
-    }
-    station
-  }, simplify = FALSE)
-  })
+      stationList[[f]] <- station
+    }, error = function(e) {
+      message(e, '\n')
+      error <<- TRUE
+    })
+    setTxtProgressBar(pb, f)
+  }
   sink(type = "message")
   file.show(log.fname)
   if(error) {
-    message('WARNING: Encountered problems while loading stations. See error log and fix CRITICAL errors.',
-            '\n You may need to upload a file of buoy deployment positions. Select a file now, \n',
-            ' or cancel and re-run with argument buoyPositions set to missing deployment data. \n',
-            ' Please ensure that the dateFormat argument matches your data (default %Y-%m-%d %H:%M:%S, see ?strptime for options).')
-    try({
-      buoyPositions <- file.choose()
-      return(loadStations(folder=folder, db.ext=db.ext, buoyPositions = buoyPositions, ...))
-    })
+    message('\nWARNING: Encountered problems while loading stations. See error log and fix CRITICAL errors.')
   }
-  if(exists('st.list')) {
-    names(st.list) <- basename(fnames)
-    attr(st.list, "survey") <- folder
-    st.list
+  if(exists('stationList')) {
+    stationList <- stationList[sapply(stationList, function(x) !is.null(x))]
+    attr(stationList, "survey") <- folder
+    stationList
   } else {
     stop('loadStations failed. See error log.')
   }

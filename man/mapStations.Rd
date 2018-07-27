@@ -5,7 +5,7 @@
 \title{Create a Summary Map of All Sonobuoy Stations}
 \usage{
 mapStations(detectionData, zoom = "auto", crop = FALSE, map = NULL,
-  title = "Sonobuoy Stations", colorBy = "Cruise", size = 3)
+  title = "Sonobuoy Stations", colorBy = "cruise", size = 3)
 }
 \arguments{
 \item{detectionData}{detection summary data returned by \code{detectionSummary}}
