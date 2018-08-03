@@ -4,13 +4,13 @@
 \alias{loadStations}
 \title{Load Multiple Stations}
 \usage{
-loadStations(folder, db.ext = "sqlite3", ...)
+loadStations(folder, dbExt = "sqlite3", ...)
 }
 \arguments{
 \item{folder}{folder containing SQLite databases with DIFAR data. if missing
 a dialog box will be presented to choose a folder}
 
-\item{db.ext}{database extension to look for in chosen folder}
+\item{dbExt}{database extension to look for in chosen folder}
 
 \item{\dots}{other parameters to be passed to formatStation function}
 }

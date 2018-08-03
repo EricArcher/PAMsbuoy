@@ -3,7 +3,7 @@
 #'
 #' @param folder folder containing SQLite databases with DIFAR data. if missing
 #'   a dialog box will be presented to choose a folder
-#' @param db.ext database extension to look for in chosen folder
+#' @param dbExt database extension to look for in chosen folder
 #' @param \dots other parameters to be passed to formatStation function
 #'
 #' @return a list of sonobuoy stations
@@ -14,15 +14,22 @@
 #' @importFrom tools list_files_with_exts
 #' @export
 #'
-loadStations <- function(folder, db.ext = "sqlite3", ...) {
+loadStations <- function(folder, dbExt = "sqlite3", ...) {
   if(missing(folder)) folder <- tcltk::tk_choose.dir()
   if(is.na(folder)) stop("No folder chosen")
+  # If only 1 file, not a folder
+  if(grepl(paste0(dbExt, '$'), folder) &&
+     file.exists(folder)) {
+    fnames <- folder
+  } else {
+    fnames <- tools::list_files_with_exts(folder, exts = dbExt)
+    fnames <- fnames[order(nchar(fnames), fnames)]
+  }
 
-  log.fname <- "PAMsbuoy_loadStations_log.txt"
-  log <- file(log.fname, open = "wt")
+  logFname <- "PAMsbuoy_loadStations_log.txt"
+  log <- file(logFname, open = "wt")
   sink(log, type = "message")
-  fnames <- tools::list_files_with_exts(folder, exts = db.ext)
-  fnames <- fnames[order(nchar(fnames), fnames)]
+
   error <- FALSE
   # need to wrap this in a try, otherwise if theres an error we dont close the sink connection
   cat('Loading stations... \n')
@@ -47,7 +54,7 @@ loadStations <- function(folder, db.ext = "sqlite3", ...) {
     setTxtProgressBar(pb, f)
   }
   sink(type = "message")
-  file.show(log.fname)
+  file.show(logFname)
   if(error) {
     message('\nWARNING: Encountered problems while loading stations. See error log and fix CRITICAL errors.')
   }
