@@ -66,7 +66,7 @@ getMap <- function(positions, force=FALSE, zoom=10, center=NULL, quiet=FALSE, of
       theme(panel.grid = element_blank(), panel.background = element_rect(fill='#A3CCFF'))
     # We cant plot directly on this map, coord_map breaks the fill, but we need the aspect ratio.
     coordmap <- basemap + geom_point(data=positions, aes(x=Longitude, y=Latitude)) + coord_map()
-    maprange <- ggplot_build(coordmap)$layout$panel_ranges[[1]]
+    maprange <- ggplot_build(coordmap)$layout$panel_params[[1]]
     aspect <- with(maprange, (y.proj[2]-y.proj[1])/(x.proj[2]-x.proj[1]))
     # If no specific box given, need to extend the x axis a bit or it looks weird later
     if(is.null(bounds)) {

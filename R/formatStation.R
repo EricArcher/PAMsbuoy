@@ -412,6 +412,15 @@ formatStationInfo <- function(db) {
     deployInfo <- data.frame(cruise=NA, instrument_type=NA,
                               instrument_id=NA, station_type='DensityEstimate', vis_id=NA)
   } else {
+    deployCols <- c('cruise', 'instrument_type', 'instrument_id', 'station_type', 'vis_id')
+    missing <- deployCols[!(deployCols %in% colnames(deployInfo))]
+    for(col in missing) {
+      deployInfo[[col]] <- ifelse(col=='station_type', 'DensityEstimate', NA)
+    }
+    if(length(missing) > 0) {
+      message(paste0('  column(s) ', paste(missing, collapse = ', '), ' are missing',
+                     ' from "Deploy" table. Substituting with default (NA) values.'))
+    }
     deployInfo <- deployInfo %>%
       mutate(cruise = str_trim(cruise),
              instrument_type = tolower(str_trim(instrument_type)),
