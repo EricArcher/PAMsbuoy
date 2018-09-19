@@ -43,10 +43,15 @@ applyCalibration <- function(stationList, myStations, recalibrate = FALSE, metho
       next
     }
     for(b in seq_along(stationList[[s]]$buoys)) {
-
       thisBuoy <- stationList[[s]]$buoys[[b]]$calibration$Buoy[1]
       whichThisBuoy <- stationList[[s]]$detections$Buoy==thisBuoy
       thisBuoyData <- stationList[[s]]$buoys[[b]]
+
+      # No calibration data
+      if(is.null(thisBuoyData$calibration) ||
+         nrow(thisBuoyData$calibration)==0) {
+        next
+      }
 
       # If value is not NA we have already calibrated, so dont re-cal
       if(!recalibrate && !is.na(thisBuoyData$info$calibrationType)) {
