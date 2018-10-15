@@ -4,8 +4,9 @@
 \alias{createSummaryReport}
 \title{Create a Summary Report for a List of Stations}
 \usage{
-createSummaryReport(stationList, outDir = ".", fileName = "summaryReport",
-  format = "word", test = FALSE, wincruz = NULL, specFile = NULL)
+createSummaryReport(stationList, outDir = ".",
+  fileName = "summaryReport", format = "word", test = FALSE,
+  wincruz = NULL, specFile = NULL)
 }
 \arguments{
 \item{stationList}{list of stations to create the summary report for}

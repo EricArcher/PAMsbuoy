@@ -45,6 +45,10 @@ formatStation <- function(db, buoyPositions = NULL, overrideError=FALSE,
       stop('Provided buoyPositions file must have columns ', paste(neededCols, collapse=', '))
     }
     buoyPositions$UTC <- as.POSIXct(buoyPositions$UTC, tz='GMT', format=dateFormat)
+    if(any(is.na(buoyPositions$UTC))) {
+      stop('Unable to get valid date from provided buoyPositions file. Please check',
+           ' UTC values, or change the dateFormat argument (default is "%Y-%m-%d %H:%M:%S").')
+    }
     if('Station' %in% colnames(buoyPositions)) {
       buoyPositions <- mutate(buoyPositions, Station = gsub('\\..*$', '', Station)) %>%
         filter(Station == gsub('\\..*$', '', attr(db, 'station')))

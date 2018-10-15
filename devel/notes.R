@@ -140,3 +140,6 @@
 
 
 # Calibration summary function to call
+
+# Localization is in greene.etal sonobuoy paper with gain imbalance. max like with von mises and some
+# extra fanciness for robustlihood.

@@ -18,8 +18,10 @@ loadStations <- function(folder, dbExt = "sqlite3", ...) {
   if(missing(folder)) folder <- tcltk::tk_choose.dir()
   if(is.na(folder)) stop("No folder chosen")
   # If only 1 file, not a folder
-  if(grepl(paste0(dbExt, '$'), folder) &&
-     file.exists(folder)) {
+  if(grepl(paste0(dbExt, '$'), folder)) {
+    if(!file.exists(folder)) {
+      stop('File ', folder, ' does not exist.')
+    }
     fnames <- folder
   } else {
     fnames <- tools::list_files_with_exts(folder, exts = dbExt)

@@ -35,7 +35,8 @@ calPositions <-
 # calPositions <- readRDS('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.RDS')
 # calPositions <- read.csv('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.csv')
 calStations <- loadStations('../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/', extraCols='TrackedGroup',
-                            buoyPositions = '../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.csv')
+                            buoyPositions = '../SonoBuoy/Data/CalCurCEAS2014/CalCurCEAS_SonoBuoy/SQLite/calPositions.csv',
+                            dateFormat = '%m/%d/%Y %H:%M')
 # Sette
 setteStations <- loadStations('../SonoBuoy/Data/HICEAS_2017/Sette/Database/')
 # Lasker
@@ -375,3 +376,16 @@ usedismap + geom_point(data=PAMsbuoy:::fixDateline(plotme), aes(x=Longitude, y=L
   geom_point(data=PAMsbuoy:::fixDateline(calSum), aes(x=Longitude, y=Latitude))
 wut
 wtf <- ggplot_build(test)$layout$panel_ranges[[1]]
+
+# drift plots
+one <- calStations$`1647_SB_S4S5s.sqlite3`
+ggplot() +
+  geom_point(data=one$buoys$`0`$position, aes(x=Longitude, y=Latitude), color='blue') +
+  geom_point(data = one$buoys$`1`$position, aes(x=Longitude, y=Latitude), color='brown') +
+  geom_point(data=one$detections, aes(x=driftedBuoyLong, y=driftedBuoyLat, color=Buoy))
+
+drifted <- bind_rows(lapply(calStations, function(s) {
+  if('driftedBuoyLat' %in% colnames(s$detections)) {
+    rbind(s$buoys[[1]]$calibration, s$buoys[[2]]$calibration)
+  }
+}))
