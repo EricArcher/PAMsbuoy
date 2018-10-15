@@ -51,16 +51,18 @@ calibrateStations <- function(stationList, type='', recalibrate=FALSE, ...) {
   #   isSurvey <- TRUE
   #   myStations <- seq_along(stationList)
   # }
-  calTypes <- c('check', 'apply', 'drift')
+  calTypes <- c('check', 'applycal', 'drift', 'applydrift')
   if(!(type %in% calTypes)) {
     type <- calTypes[menu(title='What kind of calibration would you like to do?',
-                 choices=c('Check calibration quality', 'Apply calibration', 'Calibrate drift'))]
+                 choices=c('Check calibration quality', 'Apply calibration',
+                           'Calibrate drift', 'Apply drift'))]
   }
 
   switch (type,
     check = stationList <- checkCalibrations(stationList, myStations, recalibrate, ...),
-    apply = stationList <- applyCalibration(stationList, myStations, recalibrate, ...),
-    drift = stationList <- driftCalibration(stationList, myStations, recalibrate, ...)
+    applycal = stationList <- applyCalibration(stationList, myStations, recalibrate, ...),
+    drift = stationList <- driftCalibration(stationList, myStations, recalibrate, ...),
+    applydrift = stationList <- applyDrift(stationList, myStations, recalibrate, ...)
   )
 
   cat('\nDone with calibration.')

@@ -3,10 +3,11 @@ Title: Manipulation and filtering for PAM (Passive Acoustic Monitoring) data
     collected from sonobuoys
 Description: Manipulation and filtering for PAM (Passive Acoustic Monitoring)
     data collected from sonobuoys.
-Version: 1.0.1
+Version: 1.0.2
 License: GNU General Public License
 Authors@R: c(
-  EA = person("Eric", "Archer", email = "eric.archer@noaa.gov", role = c("aut", "cre")))
+  EA = person("Eric", "Archer", email = "eric.archer@noaa.gov", role = c("aut", "cre")),
+  TS = person("Taiki", "Sakai", email = "taiki.sakai@noaa.gov", role = c("aut")))
 URL: https://github.com/EricArcher/PAMSbuoy
 Depends:
     R (>= 3.2.0)
@@ -31,4 +32,5 @@ Imports:
     utils,
     geosphere,
     viridisLite
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
+Encoding: UTF-8

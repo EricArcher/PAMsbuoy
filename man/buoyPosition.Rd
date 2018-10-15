@@ -5,7 +5,8 @@
 \alias{buoyPositionInitial}
 \title{Buoy Position}
 \usage{
-buoyPosition(x, buoyData, method = c("initial", "interpolate", "drift"), ...)
+buoyPosition(x, buoyData, method = c("initial", "interpolate", "drift"),
+  ...)
 
 buoyPositionInitial(x, buoyData)
 }

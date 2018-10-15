@@ -4,8 +4,8 @@
 \alias{applyCalibration}
 \title{Apply Bearing Calibration}
 \usage{
-applyCalibration(stationList, myStations, recalibrate = FALSE, method = "",
-  ...)
+applyCalibration(stationList, myStations, recalibrate = FALSE,
+  method = "", ...)
 }
 \arguments{
 \item{stationList}{a list of sonobuoy stations as created by \code{loadStations},

@@ -4,7 +4,8 @@
 \alias{driftCalibration}
 \title{Estimate Sonobuoy Drift Rate and Direction}
 \usage{
-driftCalibration(stationList, myStations, recalibrate = FALSE, map = FALSE)
+driftCalibration(stationList, myStations, recalibrate = FALSE,
+  map = FALSE)
 }
 \arguments{
 \item{stationList}{a list of sonobuoy stations as created by \code{loadStations},
