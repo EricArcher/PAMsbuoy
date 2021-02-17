@@ -9,8 +9,14 @@
 \alias{convertBinaryChannel}
 \title{Format Station Data}
 \usage{
-formatStation(db, buoyPositions = NULL, overrideError = FALSE,
-  dateFormat = "\%Y-\%m-\%d \%H:\%M:\%S", extraCols = NULL, ...)
+formatStation(
+  db,
+  buoyPositions = NULL,
+  overrideError = FALSE,
+  dateFormat = "\%Y-\%m-\%d \%H:\%M:\%S",
+  extraCols = NULL,
+  ...
+)
 
 formatBuoyPosition(db)
 

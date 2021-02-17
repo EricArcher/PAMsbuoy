@@ -8,7 +8,6 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}
 #'
-#' @importFrom stats approx
 #' @importFrom geosphere bearing
 #'
 calculateOffset <- function(calibration, position, db) {

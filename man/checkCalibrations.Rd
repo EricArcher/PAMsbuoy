@@ -4,8 +4,13 @@
 \alias{checkCalibrations}
 \title{Check Buoy Calibrations}
 \usage{
-checkCalibrations(stationList, myStations, recalibrate = FALSE,
-  midFun = median, goodRange = 10)
+checkCalibrations(
+  stationList,
+  myStations,
+  recalibrate = FALSE,
+  midFun = median,
+  goodRange = 10
+)
 }
 \arguments{
 \item{stationList}{a list of sonobuoy stations as created by \code{loadStations},

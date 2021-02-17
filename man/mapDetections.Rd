@@ -4,9 +4,18 @@
 \alias{mapDetections}
 \title{Create a Map Showing Numbers of Detections}
 \usage{
-mapDetections(detectionData, species = "all", combine = TRUE,
-  value = "NumDetections", map = NULL, size = 3, ncol = 3,
-  palette = "Reds", nGroups = 6, grouping = "station")
+mapDetections(
+  detectionData,
+  species = "all",
+  combine = TRUE,
+  value = "NumDetections",
+  map = NULL,
+  size = 3,
+  ncol = 3,
+  palette = "Reds",
+  nGroups = 6,
+  grouping = "station"
+)
 }
 \arguments{
 \item{detectionData}{a dataframe with data on detections. Must have columns

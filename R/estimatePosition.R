@@ -16,12 +16,15 @@
 #' @export
 #'
 estimatePosition <- function(x, pos) {
-  df <- data.frame(
-    Latitude = approx(pos$UTC, pos$Latitude, x)$y,
-    Longitude = approx(pos$UTC, pos$Longitude, x)$y
-  )
+  tryCatch({df <- data.frame(
+    Latitude = approx(pos$UTC, pos$Latitude, x, ties=mean)$y,
+    Longitude = approx(pos$UTC, pos$Longitude, x, ties=mean)$y
+  )},
+  warning = function(w) {
+    browser()
+  })
   if("MagneticVariation" %in% colnames(pos)) {
-    df$MagneticVariation <- approx(pos$UTC, pos$MagneticVariation, x)$y
+    df$MagneticVariation <- approx(pos$UTC, pos$MagneticVariation, x, ties=mean)$y
   }
   df
 }

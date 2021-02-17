@@ -14,6 +14,7 @@
 #' @param format output format of report, either word or html
 #' @param wincruz an optional wincruz file for matching species to opportunistic sightings
 #' @param specFile an optional species code file to match with wincruz species IDs
+#' @param test temporary logical flag for testing
 #'
 #' @author Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'

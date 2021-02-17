@@ -19,7 +19,7 @@
 #'
 #' @author Eric Archer \email{eric.archer@@noaa.gov}, Taiki Sakai \email{taiki.sakai@@noaa.gov}
 #'
-#' @importFrom dplyr mutate select arrange filter rename bind_rows bind_cols select_
+#' @importFrom dplyr mutate select arrange filter rename bind_rows bind_cols all_of
 #' @importFrom magrittr %>%
 #' @importFrom purrr transpose
 #' @importFrom stringr str_trim str_replace_all
@@ -251,6 +251,9 @@ formatBuoyEffort <- function(db) {
 
   finalEffort <- sapply(buoys, function(b) {
     buoyNoise <- noise
+    if(nrow(buoyNoise) == 0) {
+      return(NULL)
+    }
     buoyNoise$isBuoy <- sapply(buoyNoise$Channels, function(x) {
       any(convertBinaryChannel(x) == b)
     })
@@ -362,7 +365,7 @@ formatDetections <- function(db, buoys, extraCols = NULL) {
     mutate(detection = labelDetection(.),
            calibrationValue = NA,
            calibratedBearing = NA) %>%
-    select_(.dots = keepCols) %>%
+    select(all_of(keepCols)) %>%
     arrange(detection, Buoy, UTC)
 
   detectionEffortStatus <- function(b, dt, buoys) {

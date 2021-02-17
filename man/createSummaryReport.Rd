@@ -4,9 +4,15 @@
 \alias{createSummaryReport}
 \title{Create a Summary Report for a List of Stations}
 \usage{
-createSummaryReport(stationList, outDir = ".",
-  fileName = "summaryReport", format = "word", test = FALSE,
-  wincruz = NULL, specFile = NULL)
+createSummaryReport(
+  stationList,
+  outDir = ".",
+  fileName = "summaryReport",
+  format = "word",
+  test = FALSE,
+  wincruz = NULL,
+  specFile = NULL
+)
 }
 \arguments{
 \item{stationList}{list of stations to create the summary report for}
@@ -17,6 +23,8 @@ Report/Tables, and Report/Figures within this directory}
 \item{fileName}{name of the report file}
 
 \item{format}{output format of report, either word or html}
+
+\item{test}{temporary logical flag for testing}
 
 \item{wincruz}{an optional wincruz file for matching species to opportunistic sightings}
 

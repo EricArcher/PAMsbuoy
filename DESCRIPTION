@@ -3,7 +3,7 @@ Title: Manipulation and filtering for PAM (Passive Acoustic Monitoring) data
     collected from sonobuoys
 Description: Manipulation and filtering for PAM (Passive Acoustic Monitoring)
     data collected from sonobuoys.
-Version: 1.0.2
+Version: 1.0.3
 License: GNU General Public License
 Authors@R: c(
   EA = person("Eric", "Archer", email = "eric.archer@noaa.gov", role = c("aut", "cre")),
@@ -32,5 +32,7 @@ Imports:
     utils,
     geosphere,
     viridisLite
-RoxygenNote: 6.1.0
+Remotes:
+    dkahle/ggmap
+RoxygenNote: 7.1.1
 Encoding: UTF-8

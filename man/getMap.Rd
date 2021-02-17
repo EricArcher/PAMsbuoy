@@ -4,8 +4,15 @@
 \alias{getMap}
 \title{Get a Map of Appropriate Size}
 \usage{
-getMap(positions, force = FALSE, zoom = 10, center = NULL,
-  quiet = FALSE, offline = FALSE, bounds = NULL)
+getMap(
+  positions,
+  force = FALSE,
+  zoom = 10,
+  center = NULL,
+  quiet = FALSE,
+  offline = FALSE,
+  bounds = NULL
+)
 }
 \arguments{
 \item{positions}{data frame containing columns \code{Latitude} and \code{Longitude}}

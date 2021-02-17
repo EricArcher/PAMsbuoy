@@ -9,3 +9,7 @@ tar.gz$
 .gitignore
 ^\.travis\.yml$
 ^appveyor\.yml$
+^Tutorial/*
+^Report/*
+^PAMsbuoy_loadStations_log.txt$
+^.RDataTmp
